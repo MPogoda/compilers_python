@@ -7,14 +7,22 @@
 namespace sap
 {
 MyGrammar::MyGrammar()
-    : base_type( indent_level )
+    : base_type( start )
 {
     using qi::ascii::char_;
+    using qi::lit;
+    using namespace qi::ascii;
     using namespace qi::labels;
     using qi::eps;
+    using qi::no_skip;
 
-    indent = char_(' ') >> char_(' ') >> char_(' ') >> char_(' ');
+    indent       = lit("    ");
     indent_level = eps              [ _val = 0  ]
                 >> *indent          [ _val += 1 ];
+    identifier %=  (alpha | char_('_')) >> *(alnum | char_('_'));
+    identifiers %= identifier % char_(' ');
+    
+    start       %= indent_level
+                >> identifiers;
 }
 }

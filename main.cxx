@@ -26,7 +26,9 @@ int main( int /*argc*/, char* /*argv*/[] )
 
         std::cout << "Distance: " << std::distance( beg, end ) << "\n";
         std::cout << "R: " << r << "\n";
-        std::cout << "Result: " << static_cast< uint32_t >( result )<< "\n";
+        std::cout << "Result: indent" << result.indent << "; identifiers: ";
+        for ( const auto& id : result.identifiers ) std::cout << id<< "   ";
+        std::cout << "\n";
 
 
         std::cout.flush();
