@@ -21,8 +21,8 @@ MyGrammar::MyGrammar()
                 >> *indent          [ _val += 1 ];
     identifier %=  (alpha | char_('_')) >> *(alnum | char_('_'));
     identifiers %= identifier % char_(' ');
-    
+
     start       %= indent_level
                 >> identifiers;
 }
-}
+} // namespace sap

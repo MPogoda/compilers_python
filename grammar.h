@@ -2,8 +2,6 @@
 #include <boost/spirit/include/qi_grammar.hpp>
 #include <boost/spirit/include/qi_rule.hpp>
 
-#include <boost/spirit/include/qi.hpp>
-
 #include <string>
 
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -37,9 +35,9 @@ public:
     qi::rule< Iterator, uint32_t() >    indent_level;
     qi::rule< Iterator, std::string() > identifier;
     qi::rule< Iterator, std::vector< std::string >() > identifiers;
-    
+
     qi::rule< Iterator, Return() >      start;
-    
+
     MyGrammar( );
 }; // class MyGrammar
 

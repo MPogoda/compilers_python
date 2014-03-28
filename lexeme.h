@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/variant.hpp>
+
+#include <iosfwd>
+
 namespace sap
 {
 struct lex
@@ -10,6 +14,7 @@ struct lex
         , RESERVED
         , IDENTIFIER
         }; // enum class type
+
     enum class symbol : uint8_t
         { COMMA                 // ,
         , DOT                   // .
@@ -23,22 +28,28 @@ struct lex
         , LESS                  // <
         , GREATER               // >
         , NOT                   // !
-        
-            
-        }; // enum class symbols
+        , COLON                 // :
 
-enum class reserved_word : uint8_t
-{ DEF
-, CLASS
-, IF
-, WHILE
-, BREAK
-, RETURN
-}; // enum class reserved_words   
-        
+
+        }; // enum class symbol
+
+    enum class reserved_word : uint8_t
+        { DEF
+        , CLASS
+        , IF
+        , WHILE
+        , BREAK
+        , RETURN
+        }; // enum class reserved_words
+
     type type_;
-    
-   // boost::variant< symbol, reserved_word, std::string > value_;
+
+    boost::variant< symbol, reserved_word, std::string > value_;
 }; // struct lex
+
+std::ostream& operator<<( std::ostream& out, lex::type          rhs );
+std::ostream& operator<<( std::ostream& out, lex::symbol        rhs );
+std::ostream& operator<<( std::ostream& out, lex::reserved_word rhs );
+std::ostream& operator<<( std::ostream& out, lex                rhs );
 
 } // namespace sap

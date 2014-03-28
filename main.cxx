@@ -4,6 +4,7 @@
 #include <boost/spirit/include/qi_parse.hpp>
 
 #include "grammar.h"
+#include "lexeme.h"
 
 int main( int /*argc*/, char* /*argv*/[] )
 {
@@ -33,6 +34,12 @@ int main( int /*argc*/, char* /*argv*/[] )
 
         std::cout.flush();
     }
+
+    sap::lex s;
+    s.type_ = sap::lex::type::SYMBOL;
+    s.value_ = sap::lex::reserved_word::DEF;
+
+    std::cout << s << std::endl;
 
     return 0;
 }
