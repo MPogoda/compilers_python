@@ -6,16 +6,12 @@
 #include "grammar.h"
 #include "lexeme.h"
 
-int main( int /*argc*/, char* /*argv*/[] )
+int main( int /* argc */, char* /* argv */[] )
 {
-    std::string str;
+    std::string str("    , + - \n    \n        \n\n\n");
     std::cin.unsetf( std::ios::skipws );
 
     sap::MyGrammar myGrammar;
-    while (getline( std::cin, str)) {
-        if (str.empty()) {
-            break;
-        }
 
         sap::Return result;
         sap::Iterator beg{ str.begin() };
@@ -23,23 +19,15 @@ int main( int /*argc*/, char* /*argv*/[] )
 
         std::cout << "Distance: " << std::distance( beg, end ) << "\n";
 
-        bool r = boost::spirit::qi::parse( beg, end, myGrammar, result );
+        while (boost::spirit::qi::parse( beg, end, myGrammar, result ))
+            ;
 
         std::cout << "Distance: " << std::distance( beg, end ) << "\n";
-        std::cout << "R: " << r << "\n";
-        std::cout << "Result: indent" << result.indent << "; identifiers: ";
-        for ( const auto& id : result.identifiers ) std::cout << id<< "   ";
-        std::cout << "\n";
-
-
+        for (const auto& r : result)
+            std::cout << r << '\t';
+        // std::cout << "Result: " << result << "\n";
+        //
         std::cout.flush();
-    }
-
-    sap::lex s;
-    s.type_ = sap::lex::type::SYMBOL;
-    s.value_ = sap::lex::reserved_word::DEF;
-
-    std::cout << s << std::endl;
 
     return 0;
 }

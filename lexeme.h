@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
 
 #include <iosfwd>
 
@@ -10,6 +11,7 @@ struct lex
 {
     enum class type : uint8_t
         { SYMBOL
+        , INDENT
         , CONST
         , RESERVED
         , IDENTIFIER
@@ -29,6 +31,7 @@ struct lex
         , GREATER               // >
         , NOT                   // !
         , COLON                 // :
+        , EOL                   // \n
 
 
         }; // enum class symbol
@@ -44,12 +47,17 @@ struct lex
 
     type type_;
 
-    boost::variant< symbol, reserved_word, std::string > value_;
+    typedef boost::variant< symbol, reserved_word, std::string, short > value;
+    value value_;
 }; // struct lex
 
 std::ostream& operator<<( std::ostream& out, lex::type          rhs );
 std::ostream& operator<<( std::ostream& out, lex::symbol        rhs );
 std::ostream& operator<<( std::ostream& out, lex::reserved_word rhs );
 std::ostream& operator<<( std::ostream& out, lex                rhs );
-
 } // namespace sap
+BOOST_FUSION_ADAPT_STRUCT(
+    sap::lex,
+    (sap::lex::type, type_)
+    (sap::lex::value, value_)
+)
