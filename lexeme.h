@@ -54,7 +54,7 @@ struct lex
 
     type type_;
 
-    typedef boost::variant< symbol, reserved_word, std::string, uint > value;
+    typedef boost::variant< symbol, reserved_word, std::string, uint, double, bool > value;
     value value_;
 
     static const char* const type_STRINGS       [ static_cast< uint8_t >( lex::type::COUNT )            ];

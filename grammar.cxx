@@ -73,6 +73,13 @@ public:
     qi::rule< Iterator, std::string() > identifier;
     qi::rule< Iterator, lex() >         identifier_rule;
 
+    qi::rule< Iterator, lex::type()   > constant_type;
+    qi::rule< Iterator, std::string() > string_constant;
+    qi::rule< Iterator, uint()        > uint_constant;
+    qi::rule< Iterator, double()      > double_constant;
+    qi::rule< Iterator, bool()        > bool_constant;
+    qi::rule< Iterator, lex()         > constant_rule;
+
     qi::rule< Iterator, lex() > visible_lexeme;
 
     qi::rule< Iterator, void() >    empty_line;
@@ -92,9 +99,8 @@ MyGrammar::MyGrammar()
     using namespace qi::labels;
     using qi::eps;
     using qi::eol;
-    using qi::no_skip;
-    using qi::skip;
-    using qi::space;
+    using qi::uint_;
+    using qi::double_;
 
     // match 4 spaces
     indent       = lit("    ");
@@ -130,11 +136,23 @@ MyGrammar::MyGrammar()
     identifier_rule  = identifier_type
                     >> identifier;
 
+    constant_type    = eps                      [ _val = lex::type::CONST ];
+    uint_constant   %= uint_;
+    double_constant %= double_;
+    bool_constant    = lit("True")              [ _val = true ]
+                     | lit("False")             [ _val = false ];
+    string_constant %= lit("\"")
+                    >> *(char_ - char_('"'))
+                    >> lit("\"");
+    constant_rule   %= constant_type
+                    >> ( double_constant | uint_constant | bool_constant | string_constant );
+
     // matches all lexemes, that a visible (not indent & newline )
     // it's either reserved word, or symbol, or identifier
     visible_lexeme  %= reserved_rule
-                    |  symbol_rule
+                    |  constant_rule
                     |  identifier_rule
+                    |  symbol_rule
                     ;
 
     // Matches only indent, but doesn't set anything (it's type is void)
