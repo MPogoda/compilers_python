@@ -12,6 +12,7 @@ struct lex
     enum class type : uint8_t
         { SYMBOL
         , INDENT
+        , NEWLINE
         , CONST
         , RESERVED
         , IDENTIFIER
@@ -31,9 +32,6 @@ struct lex
         , GREATER               // >
         , NOT                   // !
         , COLON                 // :
-        , EOL                   // \n
-
-
         }; // enum class symbol
 
     enum class reserved_word : uint8_t
@@ -47,7 +45,7 @@ struct lex
 
     type type_;
 
-    typedef boost::variant< symbol, reserved_word, std::string, short > value;
+    typedef boost::variant< symbol, reserved_word, std::string, uint > value;
     value value_;
 }; // struct lex
 

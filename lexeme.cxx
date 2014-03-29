@@ -6,6 +6,7 @@ namespace sap
 {
 static constexpr const char* const type_STRINGS[] = { "SYMBOL"
                                                     , "INDENT"
+                                                    , "NEWLINE"
                                                     , "CONST"
                                                     , "RESERVED"
                                                     , "IDENTIFIER"
@@ -23,7 +24,6 @@ static constexpr const char* const symbol_STRINGS[] = { ","
                                                       , ">"
                                                       , "!"
                                                       , ":"
-                                                      , "\\n"
                                                       }; // symbol_STRINGS
 static constexpr const char* const reserved_STRINGS[] = { "DEF"
                                                         , "CLASS"
