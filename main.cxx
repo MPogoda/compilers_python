@@ -4,51 +4,34 @@
 #include "grammar.h"
 #include "lexeme.h"
 
-int main( int /* argc */, char* /* argv */[] )
+#include <fstream>
+#include <streambuf>
+int main( int argc, char* argv[] )
 {
-    std::string str("class someclass:\n"
-                    "    def foo( self, x ):\n"
-                    "        if x == 5:\n"
-                    "            print( \"foo\" )\n"
-                    "        else:\n"
-                    "            print( \"bar\" )\n"
-                    "\n"
-                    "    def bar( self, a, b ):\n"
-                    "        c = b - a\n"
-                    "        return c\n"
-                    "\n"
-                    "class someotherclass:\n"
-                    "    def foo( self, a, b):\n"
-                    "        c = someclass()\n"
-                    "        z = c.bar( a, b )\n"
-                    "        c.foo( z )\n"
-                    "\n"
-                    "\n"
-                    "class main:\n"
-                    "    def run( self ):\n"
-                    "        m = someotherclass()\n"
-                    "        m.foo( 5, 10 )\n"
-                    "        m.foo( 3, 6 )\n"
-                    "        a = 1.53\n"
-                    "        c = \"asddfgkjhns sdf asd \"\n"
-                    "        d = False\n"
-                    "\n"
-                    "\n"
-                    "main().run()\n"
-                    );
+    if (2 > argc) {
+        std::cout << "Little python parser by Michael Pogoda.\n"
+                  << "Usage:\n"
+                  << argv[0] << "[ file to parse ]\n";
+        return 1;
+    }
+    while (1 < argc--) {
+        std::ifstream in{ argv[ argc ] };
+        in.unsetf( std::ios::skipws );
+        const std::string str{ std::istreambuf_iterator< char >{ in }
+                             , std::istreambuf_iterator< char >{} };
 
+        std::cout << "File `\033[0;33m" << argv[ argc ] << "\033[0m'\n";
+        try {
+            sap::Lexems lexems = sap::parse( str );
+            for (const auto& lexem : lexems ) {
+                std::cout << lexem << '\n';
+            }
+        } catch ( std::exception& ex ) {
+            std::cerr << ex.what();
+        }
 
-
-
-    std::cin.unsetf( std::ios::skipws );
-
-    sap::Lexems lexems = sap::parse( str );
-
-    std::cout << "\n\n\n";
-    for (const auto& lexem : lexems )
-        std::cout << lexem << '\n';
-
-    std::cout << '\n';
+        std::cout << "\n\n";
+    }
 
     return 0;
 }
