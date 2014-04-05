@@ -13,13 +13,13 @@ namespace sap
 {
 namespace qi = boost::spirit::qi;
 
-static LinesGrammar     lines_grammar;
-static PythonGrammar    python_grammar;
-
 std::string createErrorMessage( const std::string& str, uint row, uint col );
 
 Lexems parse( const Container input )
 {
+    static LinesGrammar     lines_grammar;
+    static PythonGrammar    python_grammar;
+
     Lexems result;
 
     lines ls;

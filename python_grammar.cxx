@@ -15,9 +15,6 @@
 
 namespace sap
 {
-static Symbols          symbols;
-static ReservedWords    reserved_words;
-
 PythonGrammar::PythonGrammar()
     : base_type( start )
 {
@@ -29,6 +26,9 @@ PythonGrammar::PythonGrammar()
     using qi::lit;
     using qi::eps;
     using qi::double_;
+
+    static Symbols          symbols;
+    static ReservedWords    reserved_words;
 
     // match 4 spaces
     indent       = lit("    ");
