@@ -14,6 +14,7 @@ const char* const lex::type_STRINGS[] = { "SYMBOL"
                                         , "RESERVED"
                                         , "IDENTIFIER"
                                         , "RULE"
+                                        , "Epsilon"
                                         }; // type_STRINGS
 const char* const lex::symbol_STRINGS[] = { ","
                                           , "."

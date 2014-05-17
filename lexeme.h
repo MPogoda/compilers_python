@@ -19,6 +19,8 @@ struct lex
         , S_CONST
         , RESERVED
         , IDENTIFIER
+        , RULE
+        , EPS
 
         , COUNT
         }; // enum class type
@@ -55,20 +57,28 @@ struct lex
         , COUNT
         }; // enum class reserved_words
 
+    enum class rule : uint8_t
+        { START
+
+        , COUNT
+        }; // enum class rule
+
     type type_;
 
-    typedef boost::variant< symbol, reserved_word, std::string, uint, double, bool > value;
+    typedef boost::variant< rule, symbol, reserved_word, std::string, uint, double, bool > value;
     value value_;
 
     static const char* const type_STRINGS       [ static_cast< uint8_t >( lex::type::COUNT )            ];
     static const char* const symbol_STRINGS     [ static_cast< uint8_t >( lex::symbol::COUNT )          ];
     static const char* const reserved_STRINGS   [ static_cast< uint8_t >( lex::reserved_word::COUNT )   ];
+    static const char* const rule_STRINGS   [ static_cast< uint8_t >( lex::rule::COUNT )   ];
 
 }; // struct lex
 
 std::ostream& operator<<( std::ostream& out, lex::type          rhs );
 std::ostream& operator<<( std::ostream& out, lex::symbol        rhs );
 std::ostream& operator<<( std::ostream& out, lex::reserved_word rhs );
+std::ostream& operator<<( std::ostream& out, lex::rule rhs );
 std::ostream& operator<<( std::ostream& out, lex                rhs );
 } // namespace sap
 BOOST_FUSION_ADAPT_STRUCT(
