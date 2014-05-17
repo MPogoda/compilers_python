@@ -13,6 +13,7 @@ const char* const lex::type_STRINGS[] = { "SYMBOL"
                                         , "Str const"
                                         , "RESERVED"
                                         , "IDENTIFIER"
+                                        , "RULE"
                                         }; // type_STRINGS
 const char* const lex::symbol_STRINGS[] = { ","
                                           , "."
@@ -38,6 +39,8 @@ const char* const lex::reserved_STRINGS[] = { "def"
                                             , "print"
                                             , "input"
                                             }; // reserved_STRINGS
+const char* const lex::rule_STRINGS[] = { "{START}"
+                                        }; // rule_STRINGS
 
 std::ostream& operator<<( std::ostream& out, lex::type rhs )
 {
@@ -54,6 +57,12 @@ std::ostream& operator<<( std::ostream& out, lex::symbol rhs )
 std::ostream& operator<<( std::ostream& out, lex::reserved_word rhs )
 {
     out << lex::reserved_STRINGS[ static_cast< uint8_t >( rhs ) ];
+    return out;
+}
+
+std::ostream& operator<<( std::ostream& out, lex::rule rhs )
+{
+    out << lex::rule_STRINGS[ static_cast< uint8_t >( rhs ) ];
     return out;
 }
 
