@@ -43,6 +43,9 @@ Lexems parse( const Container input )
                 uint column = std::distance( std::begin( line ), beg);
                 throw std::invalid_argument{ createErrorMessage( line, i, column ) };
         }
+
+        if (tempResult.empty()) continue;
+
         for (const auto& lexem : tempResult ) {
             result.push_back( lexem );
         }
