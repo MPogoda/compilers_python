@@ -6,6 +6,7 @@ namespace sap
 {
 const char* const lex::type_STRINGS[] = { "SYMBOL"
                                         , "INDENT"
+                                        , "DEDENT"
                                         , "NEWLINE"
                                         , "CONST"
                                         , "RESERVED"

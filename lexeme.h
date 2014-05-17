@@ -12,6 +12,7 @@ struct lex
     enum class type : uint8_t
         { SYMBOL
         , INDENT
+        , DEDENT
         , NEWLINE
         , CONST
         , RESERVED
