@@ -29,7 +29,9 @@ struct PythonGrammar : qi::grammar< Iterator, Lexems() >
     qi::rule< Iterator, std::string() > identifier;
     qi::rule< Iterator, lex() >         identifier_rule;
 
-    qi::rule< Iterator, lex::type()   > constant_type;
+    qi::rule< Iterator, lex::type() >   s_type;
+    qi::rule< Iterator, lex::type() >   b_type;
+    qi::rule< Iterator, lex::type() >   d_type;
     qi::rule< Iterator, std::string() > string_constant;
     qi::rule< Iterator, double()      > double_constant;
     qi::rule< Iterator, bool()        > bool_constant;

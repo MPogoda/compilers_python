@@ -14,7 +14,9 @@ struct lex
         , INDENT
         , DEDENT
         , NEWLINE
-        , CONST
+        , D_CONST
+        , B_CONST
+        , S_CONST
         , RESERVED
         , IDENTIFIER
 
