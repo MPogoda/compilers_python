@@ -58,41 +58,44 @@
 
 37. {operand-int} → {identifier}
 38. {operand-int} → {int-const}
+39. {operand-bool} → {identifier}
+40. {operand-bool} → {bool-const}
+41. {operand-str} → {identifier}
+42. {operand-str} → {str-const}
 
-39. {operator-int} → *
-40. {operator-int} → +
-41. {operator-int} → -
-42. {operator-int} → /
+43. {operator-int} → *
+44. {operator-int} → +
+45. {operator-int} → -
+46. {operator-int} → /
 
-43. {param-list} → , {param} {param-list}
-44. {param-list} → {eps}
+47. {param-list} → , {rightside} {param-list}
+48. {param-list} → {eps}
 
-45. {params} → {rightside} { param-list}
-46. {params} → {eps}
+49. {params} → {rightside} { param-list}
+50. {params} → {eps}
 
-47. {rightside} → {expr-int}
-48. {rightside} → {fcall}
-49. {rightside} → {input}
-50. {rightside} → {logic}
-51. {rightside} → {mcall}
-52. {rightside} → {str-const}
+51. {rightside} → {expr-int}
+52. {rightside} → {input}
+53. {rightside} → {logic}
+54. {rightside} → {mcall}
+55. {rightside} → {str-const}
 
-53. {sline-list} → {eps}
-54. {sline-list} → {slines}
+56. {sline-list} → {eps}
+57. {sline-list} → {slines}
 
-55. {slines} → {sline} {sline-list}
+58. {slines} → {sline} {sline-list}
 
-56. {sline} → break {newline}
-57. {sline} → return {rightside} {newline}
-58. {sline} → print ( {rightside} ) {newline}
-59. {sline} → {assignment} {newline}
-60. {sline} → {ifline}
-61. {sline} → {mcall} {newline}
-62. {sline} → {whileline}
+59. {sline} → break {newline}
+60. {sline} → return {rightside} {newline}
+61. {sline} → print ( {rightside} ) {newline}
+62. {sline} → {assignment} {newline}
+63. {sline} → {ifline}
+64. {sline} → {mcall} {newline}
+65. {sline} → {whileline}
 
-63. {start} → {indent} {classes} {mcall} {newline} {dedent}
+66. {start} → {indent} {classes} {mcall} {newline} {dedent}
 
-64. {whileline} → while {logic}: {newline} {indent} {slines} {dedent}
+67. {whileline} → while {logic}: {newline} {indent} {slines} {dedent}
 
 
 
@@ -119,12 +122,14 @@
 {mparams}           {identifier}(34)
 {mparam-list}       ,( 35 ) {eps}( 36 )
 {operand-int}       {identifier}( 37 ) {int-const}( 38 )
-{operator-int}      *( 39 ) +( 40 ) -( 41 ) /( 42 )
-{param-list}        ,( 43 ) {eps}( 44 )
-{params}            {identifier}( 45 ) {int-const}( 45 ) {str-const}( 45 ) {bool-const}( 45 ) input( 45 ) {eps}( 46 )
-{rightside}         {identifier}( 47, 48, 50, 51 ) {int-const}( 47, 50 ) input( 49 ) {bool-const}( 50 ) {str-const}( 50, 52 )
-{sline-list}        {eps}( 53 ) break( 54 ) return( 54 ) print( 54 ) {identifier}( 54 ) if( 54 ) while( 54 )
-{slines}            break( 55 ) return( 55 ) print( 55 ) {identifier}( 55 ) if( 55 ) while( 55 )
-{sline}             break( 56 ) return( 57 ) print( 58 ) {identifier}( 59, 61 ) if( 60 ) while( 62 )
-{start}             {indent}( 63 )
-{whileline}         while( 64 )
+{operand-bool}      {identifier}( 39 ) {bool-const}( 40 )
+{operand-str}       {identifier}( 41 ) {str-const}( 42 )
+{operator-int}      *( 43 ) +( 44 ) -( 45 ) /( 46 )
+{param-list}        ,( 47 ) {eps}( 48 )
+{params}            {identifier}( 49 ) {int-const}( 49 ) {str-const}( 49 ) {bool-const}( 49 ) input( 49 ) {eps}( 50 )
+{rightside}         {identifier}( 51, 53, 54 ) {int-const}( 51, 53 ) input( 52 ) {bool-const}( 53 ) {str-const}( 53, 53 )
+{sline-list}        {eps}( 56 ) break( 57 ) return( 57 ) print( 57 ) {identifier}( 57 ) if( 57 ) while( 57 )
+{slines}            break( 58 ) return( 58 ) print( 58 ) {identifier}( 58 ) if( 58 ) while( 58 )
+{sline}             break( 59 ) return( 60 ) print( 61 ) {identifier}( 62, 64 ) if( 63 ) while( 65 )
+{start}             {indent}( 66 )
+{whileline}         while( 67 )

@@ -58,7 +58,40 @@ struct lex
         }; // enum class reserved_words
 
     enum class rule : uint8_t
-        { START
+        { APPLICABLE
+        , ASSIGNMENT
+        , CLASS_DECL
+        , CLASS_LIST
+        , CLASSES
+        , COMPARATOR_EQ
+        , COMPARATOR_INT
+        , ELSELINE
+        , EXPR_INT
+        , FCALL
+        , IFLINE
+        , INPUT
+        , LOGIC_BOOL
+        , LOGIC_INT
+        , LOGIC_STR
+        , LOGIC
+        , MCALL
+        , METHOD_DECL
+        , METHOD_LIST
+        , METHODS
+        , MPARAMS
+        , MPARAM_LIST
+        , OPERAND_INT
+        , OPERAND_BOOL
+        , OPERAND_STR
+        , OPERATOR_INT
+        , PARAM_LIST
+        , PARAMS
+        , RIGHTSIDE
+        , SLINE_LIST
+        , SLINES
+        , SLINE
+        , START
+        , WHILELINE
 
         , COUNT
         }; // enum class rule

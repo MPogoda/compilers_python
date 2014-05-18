@@ -5,6 +5,283 @@ namespace sap
 void push_rule( Stack& st, const int rule_number )
 {
     switch (rule_number) {
+        case 1:
+            st.push( { lex::type::RULE, lex::rule::APPLICABLE } );
+            break;
+        case 2:
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 3:
+            st.push( { lex::type::RULE, lex::rule::MCALL } );
+            break;
+        case 4:
+            st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 5:
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::RULE, lex::rule::METHODS } );
+            st.push( { lex::type::INDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
+            st.push( { lex::type::IDENTIFIER, "" } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::CLASS } );
+            break;
+        case 6:
+            st.push( { lex::type::RULE, lex::rule::CLASSES } );
+            break;
+        case 7:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 8:
+            st.push( { lex::type::RULE, lex::rule::CLASS_LIST } );
+            st.push( { lex::type::RULE, lex::rule::CLASS_DECL } );
+            break;
+        case 9:
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            st.push( { lex::type::SYMBOL, lex::symbol::NOT } );
+            break;
+        case 10:
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            break;
+        case 11:
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            st.push( { lex::type::SYMBOL, lex::symbol::NOT } );
+            break;
+        case 12:
+            st.push( { lex::type::SYMBOL, lex::symbol::LESS } );
+            break;
+        case 13:
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
+            break;
+        case 14:
+            st.push( { lex::type::SYMBOL, lex::symbol::GREATER } );
+            break;
+        case 15:
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::RULE, lex::rule::SLINES } );
+            st.push( { lex::type::INDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::ELSE } );
+            break;
+        case 16:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 17:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_INT } );
+            break;
+        case 18:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_INT } );
+            st.push( { lex::type::RULE, lex::rule::OPERATOR_INT } );
+            st.push( { lex::type::RULE, lex::rule::OPERAND_INT } );
+            break;
+        case 19:
+            st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
+            st.push( { lex::type::RULE, lex::rule::PARAMS } );
+            st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 20:
+            st.push( { lex::type::RULE, lex::rule::ELSELINE } );
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::RULE, lex::rule::SLINES } );
+            st.push( { lex::type::INDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
+            st.push( { lex::type::RULE, lex::rule::LOGIC } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::IF } );
+            break;
+        case 21:
+            st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
+            st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::INPUT } );
+            break;
+        case 22:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_BOOL } );
+            break;
+        case 23:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_BOOL } );
+            st.push( { lex::type::RULE, lex::rule::COMPARATOR_EQ } );
+            st.push( { lex::type::RULE, lex::rule::OPERAND_BOOL } );
+            break;
+        case 24:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_INT } );
+            st.push( { lex::type::RULE, lex::rule::COMPARATOR_INT } );
+            st.push( { lex::type::RULE, lex::rule::OPERAND_INT } );
+            break;
+        case 25:
+            st.push( { lex::type::RULE, lex::rule::OPERAND_STR } );
+            st.push( { lex::type::RULE, lex::rule::COMPARATOR_EQ } );
+            st.push( { lex::type::RULE, lex::rule::OPERAND_STR } );
+            break;
+        case 26:
+            st.push( { lex::type::RULE, lex::rule::LOGIC_BOOL } );
+            break;
+        case 27:
+            st.push( { lex::type::RULE, lex::rule::LOGIC_INT } );
+            break;
+        case 28:
+            st.push( { lex::type::RULE, lex::rule::LOGIC_STR } );
+            break;
+        case 29:
+            st.push( { lex::type::RULE, lex::rule::FCALL } );
+            st.push( { lex::type::SYMBOL, lex::symbol::DOT } );
+            st.push( { lex::type::RULE, lex::rule::APPLICABLE } );
+            break;
+        case 30:
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::RULE, lex::rule::SLINES } );
+            st.push( { lex::type::INDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
+            st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
+            st.push( { lex::type::RULE, lex::rule::MPARAMS } );
+            st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
+            st.push( { lex::type::IDENTIFIER, "" } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::DEF } );
+            break;
+        case 31:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 32:
+            st.push( { lex::type::RULE, lex::rule::METHODS } );
+            break;
+        case 33:
+            st.push( { lex::type::RULE, lex::rule::METHOD_LIST } );
+            st.push( { lex::type::RULE, lex::rule::METHOD_DECL } );
+            break;
+        case 34:
+            st.push( { lex::type::RULE, lex::rule::MPARAM_LIST } );
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 35:
+            st.push( { lex::type::RULE, lex::rule::MPARAMS } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COMMA } );
+            break;
+        case 36:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 37:
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 38:
+            st.push( { lex::type::D_CONST, 0u } );
+            break;
+        case 39:
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 40:
+            st.push( { lex::type::B_CONST, false } );
+            break;
+        case 41:
+            st.push( { lex::type::IDENTIFIER, "" } );
+            break;
+        case 42:
+            st.push( { lex::type::S_CONST, 0u } );
+            break;
+        case 43:
+            st.push( { lex::type::SYMBOL, lex::symbol::STAR } );
+            break;
+        case 44:
+            st.push( { lex::type::SYMBOL, lex::symbol::PLUS } );
+            break;
+        case 45:
+            st.push( { lex::type::SYMBOL, lex::symbol::MINUS } );
+            break;
+        case 46:
+            st.push( { lex::type::SYMBOL, lex::symbol::SLASH } );
+            break;
+        case 47:
+            st.push( { lex::type::RULE, lex::rule::PARAM_LIST } );
+            st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COMMA } );
+            break;
+        case 48:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 49:
+            st.push( { lex::type::RULE, lex::rule::PARAM_LIST } );
+            st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
+            break;
+        case 50:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 51:
+            st.push( { lex::type::RULE, lex::rule::EXPR_INT } );
+            break;
+        case 52:
+            st.push( { lex::type::RULE, lex::rule::INPUT } );
+            break;
+        case 53:
+            st.push( { lex::type::RULE, lex::rule::LOGIC } );
+            break;
+        case 54:
+            st.push( { lex::type::RULE, lex::rule::MCALL } );
+            break;
+        case 55:
+            st.push( { lex::type::S_CONST, "" } );
+            break;
+        case 56:
+            st.push( { lex::type::EPS, 0u } );
+            break;
+        case 57:
+            st.push( { lex::type::RULE, lex::rule::SLINES } );
+            break;
+        case 58:
+            st.push( { lex::type::RULE, lex::rule::SLINE_LIST } );
+            st.push( { lex::type::RULE, lex::rule::SLINE } );
+            break;
+        case 59:
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::BREAK } );
+            break;
+        case 60:
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::RETURN } );
+            break;
+        case 61:
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
+            st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
+            st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::PRINT } );
+            break;
+        case 62:
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::RULE, lex::rule::ASSIGNMENT } );
+            break;
+        case 63:
+            st.push( { lex::type::RULE, lex::rule::IFLINE } );
+            break;
+        case 64:
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::RULE, lex::rule::MCALL } );
+            break;
+        case 65:
+            st.push( { lex::type::RULE, lex::rule::WHILELINE } );
+            break;
+        case 66:
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::RULE, lex::rule::MCALL } );
+            st.push( { lex::type::RULE, lex::rule::CLASSES } );
+            st.push( { lex::type::INDENT, 0u } );
+            break;
+        case 67:
+            st.push( { lex::type::DEDENT, 0u } );
+            st.push( { lex::type::RULE, lex::rule::SLINES } );
+            st.push( { lex::type::INDENT, 0u } );
+            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
+            st.push( { lex::type::RULE, lex::rule::LOGIC } );
+            st.push( { lex::type::RESERVED, lex::reserved_word::WHILE } );
+            break;
+
         default:
             assert( !"NO SUCH RULE!" );
     }
