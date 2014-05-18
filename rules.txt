@@ -1,0 +1,93 @@
+{applicable} → {fcall}
+{applicable} → {identifier}
+{applicable} → {mcall}
+
+{assignment} → {identifier} = {rightside}
+
+{class-decl} → class {identifier}:{newline} {indent} {methods} {dedent}
+
+{class-list} → {classes}
+{class-list} → {eps}
+
+{classes} → {class-decl} {class-list}
+
+{comparator-eq} → !=
+{comparator-eq} → ==
+
+{comparator-int} → !=
+{comparator-int} → <
+{comparator-int} → ==
+{comparator-int} → >
+
+{elseline} → else : {newline} {indent} {slines} {dedent}
+{elseline} → {eps}
+
+{expr-int} → {operand-int}
+{expr-int} → {operand-int} {operator-int} {operand-int}
+
+{fcall} → {identifier} ( {params} )
+
+{ifline} → if {logic} : {newline} {indent} {slines} {dedent} {elseline}
+
+{input} → input ( )
+
+{logic-bool} → {operand-bool}
+{logic-bool} → {operand-bool} {comparator-eq} {operand-bool}
+
+{logic-int} → {operand-int} {comparator-int} {operand-int}
+
+{logic-str} → {operand-str} {comparator-eq} {operand-str}
+
+{logic} → {logic-bool}
+{logic} → {logic-int}
+{logic} → {logic-str}
+
+{mcall} → {applicable} . {fcall}
+
+{method-decl} → def {identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}
+
+{method-list} → {eps}
+{method-list} → {methods}
+
+{methods} → {method-decl} {method-list}
+
+{mparams} → {param} {param-list}
+
+{operand-int} → {identifier}
+{operand-int} → {int-const}
+
+{operator-int} → *
+{operator-int} → +
+{operator-int} → -
+{operator-int} → /
+
+{param-list} → , {param} {param-list}
+{param-list} → {eps}
+
+{params} → {eps}
+{params} → {mparams}
+
+{param} → {rightside}
+
+{rightside} → {expr-int}
+{rightside} → {fcall}
+{rightside} → {input}
+{rightside} → {logic}
+{rightside} → {mcall}
+
+{sline-list} → {eps}
+{sline-list} → {slines}
+
+{slines} → {sline} {sline-list}
+
+{sline} → break {newline}
+{sline} → return {rightside} {newline}
+{sline} → print ( {rightside} ) {newline}
+{sline} → {assignment} {newline}
+{sline} → {ifline}
+{sline} → {mcall} {newline}
+{sline} → {whileline}
+
+{start} → {indent} {classes} {mcall} {newline} {dedent}
+
+{whileline} → while {logic}: {newline} {indent} {slines} {dedent}
