@@ -127,7 +127,7 @@
 {operator-int}      *( 43 ) +( 44 ) -( 45 ) /( 46 )
 {param-list}        ,( 47 ) {eps}( 48 )
 {params}            {identifier}( 49 ) {int-const}( 49 ) {str-const}( 49 ) {bool-const}( 49 ) input( 49 ) {eps}( 50 )
-{rightside}         {identifier}( 51, 53, 54 ) {int-const}( 51, 53 ) input( 52 ) {bool-const}( 53 ) {str-const}( 53, 53 )
+{rightside}         {identifier}( 51, 53, 54 ) {int-const}( 51, 53 ) input( 52 ) {bool-const}( 53 ) {str-const}( 53, 55 )
 {sline-list}        {eps}( 56 ) break( 57 ) return( 57 ) print( 57 ) {identifier}( 57 ) if( 57 ) while( 57 )
 {slines}            break( 58 ) return( 58 ) print( 58 ) {identifier}( 58 ) if( 58 ) while( 58 )
 {sline}             break( 59 ) return( 60 ) print( 61 ) {identifier}( 62, 64 ) if( 63 ) while( 65 )

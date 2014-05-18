@@ -402,7 +402,231 @@ Table createTable()
     Table result;
 
     using map = std::unordered_multimap< lex, int >;
-    // map tmp;
+    map tmp;
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 1 }
+                , { { lex::type::IDENTIFIER, "" }, 2 }
+                , { { lex::type::IDENTIFIER, "" }, 3 } } );
+    result.insert( { lex::rule::APPLICABLE, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::IDENTIFIER, "" }, 4 } );
+    result.insert( { lex::rule::ASSIGNMENT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::RESERVED, lex::reserved_word::CLASS }, 5 } );
+    result.insert( { lex::rule::CLASS_DECL, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::RESERVED, lex::reserved_word::CLASS }, 6 }
+                , { { lex::type::EPS, 0u }, 7 } } );
+    result.insert( { lex::rule::CLASS_LIST, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::RESERVED, lex::reserved_word::CLASS }, 8 } );
+    result.insert( { lex::rule::CLASSES, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT }, 9 }
+                , { { lex::type::SYMBOL, lex::symbol::EQUAL }, 10 } } );
+    result.insert( { lex::rule::COMPARATOR_EQ, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT }, 11 }
+                , { { lex::type::SYMBOL, lex::symbol::LESS }, 12 }
+                , { { lex::type::SYMBOL, lex::symbol::EQUAL }, 13 }
+                , { { lex::type::SYMBOL, lex::symbol::GREATER }, 14 }
+                } );
+    result.insert( { lex::rule::COMPARATOR_INT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::RESERVED, lex::reserved_word::ELSE }, 15 }
+                , { { lex::type::EPS, 0u }, 16 }
+                } );
+    result.insert( { lex::rule::ELSELINE, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 17 }
+                , { { lex::type::IDENTIFIER, "" }, 18 }
+                , { { lex::type::D_CONST, "" }, 17 }
+                , { { lex::type::D_CONST, "" }, 18 }
+                } );
+    result.insert( { lex::rule::EXPR_INT, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::IDENTIFIER, "" }, 19 }
+                 );
+    result.insert( { lex::rule::FCALL, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::RESERVED, lex::reserved_word::IF }, 20 }
+                 );
+    result.insert( { lex::rule::IFLINE, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::RESERVED, lex::reserved_word::INPUT }, 21 }
+                 );
+    result.insert( { lex::rule::INPUT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 22 }
+                , { { lex::type::IDENTIFIER, "" }, 23 }
+                , { { lex::type::B_CONST, "" }, 22 }
+                , { { lex::type::B_CONST, "" }, 23 }
+                } );
+    result.insert( { lex::rule::LOGIC_BOOL, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 24 }
+                , { { lex::type::D_CONST, "" }, 24 }
+                } );
+    result.insert( { lex::rule::LOGIC_INT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 25 }
+                , { { lex::type::S_CONST, "" }, 25 }
+                } );
+    result.insert( { lex::rule::LOGIC_STR, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 26 }
+                , { { lex::type::IDENTIFIER, "" }, 27 }
+                , { { lex::type::IDENTIFIER, "" }, 28 }
+                , { { lex::type::B_CONST, "" }, 26 }
+                , { { lex::type::D_CONST, "" }, 27 }
+                , { { lex::type::S_CONST, "" }, 28 }
+                } );
+    result.insert( { lex::rule::LOGIC, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::IDENTIFIER, "" }, 29 }
+                 );
+    result.insert( { lex::rule::MCALL, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::RESERVED, lex::reserved_word::DEF }, 30 }
+                 );
+    result.insert( { lex::rule::METHOD_DECL, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::RESERVED, lex::reserved_word::DEF }, 32 }
+                , { { lex::type::EPS, 0u }, 31 }
+                } );
+    result.insert( { lex::rule::METHOD_LIST, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::RESERVED, lex::reserved_word::DEF }, 33 }
+                 );
+    result.insert( { lex::rule::METHODS, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::IDENTIFIER, "" }, 34 }
+                 );
+    result.insert( { lex::rule::MPARAMS, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::COMMA }, 35 }
+                , { { lex::type::EPS, 0u }, 36 }
+                } );
+    result.insert( { lex::rule::MPARAM_LIST, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 37 }
+                , { { lex::type::D_CONST, 0u }, 38 }
+                } );
+    result.insert( { lex::rule::OPERAND_INT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 39 }
+                , { { lex::type::B_CONST, false }, 40 }
+                } );
+    result.insert( { lex::rule::OPERAND_BOOL, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 41 }
+                , { { lex::type::S_CONST, "" }, 42 }
+                } );
+    result.insert( { lex::rule::OPERAND_STR, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::STAR }, 43 }
+                , { { lex::type::SYMBOL, lex::symbol::PLUS }, 44 }
+                , { { lex::type::SYMBOL, lex::symbol::MINUS }, 45 }
+                , { { lex::type::SYMBOL, lex::symbol::SLASH }, 46 }
+                } );
+    result.insert( { lex::rule::OPERATOR_INT, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::COMMA }, 47 }
+                , { { lex::type::EPS, 0u }, 48 }
+                } );
+    result.insert( { lex::rule::PARAM_LIST, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 49 }
+                , { { lex::type::D_CONST, 0u }, 49 }
+                , { { lex::type::S_CONST, 0u }, 49 }
+                , { { lex::type::B_CONST, 0u }, 49 }
+                , { { lex::type::RESERVED, lex::reserved_word::INPUT }, 49 }
+                , { { lex::type::EPS, 0u }, 50 }
+                } );
+    result.insert( { lex::rule::PARAMS, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 51 }
+                , { { lex::type::IDENTIFIER, "" }, 53 }
+                , { { lex::type::IDENTIFIER, "" }, 54 }
+                , { { lex::type::D_CONST, 0u }, 51 }
+                , { { lex::type::D_CONST, 0u }, 53 }
+                , { { lex::type::RESERVED, lex::reserved_word::INPUT }, 52 }
+                , { { lex::type::B_CONST, 0u }, 53 }
+                , { { lex::type::S_CONST, 0u }, 53 }
+                , { { lex::type::S_CONST, 0u }, 55 }
+                } );
+    result.insert( { lex::rule::RIGHTSIDE, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 57 }
+                , { { lex::type::RESERVED, lex::reserved_word::PRINT }, 57 }
+                , { { lex::type::RESERVED, lex::reserved_word::BREAK }, 57 }
+                , { { lex::type::RESERVED, lex::reserved_word::RETURN }, 57 }
+                , { { lex::type::RESERVED, lex::reserved_word::IF }, 57 }
+                , { { lex::type::RESERVED, lex::reserved_word::WHILE }, 57 }
+                , { { lex::type::EPS, "" }, 56 }
+                } );
+    result.insert( { lex::rule::SLINE_LIST, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 58 }
+                , { { lex::type::RESERVED, lex::reserved_word::PRINT }, 58 }
+                , { { lex::type::RESERVED, lex::reserved_word::BREAK }, 58 }
+                , { { lex::type::RESERVED, lex::reserved_word::RETURN }, 58 }
+                , { { lex::type::RESERVED, lex::reserved_word::IF }, 58 }
+                , { { lex::type::RESERVED, lex::reserved_word::WHILE }, 58 }
+                } );
+    result.insert( { lex::rule::SLINES, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { { lex::type::IDENTIFIER, "" }, 62 }
+                , { { lex::type::IDENTIFIER, "" }, 64 }
+                , { { lex::type::RESERVED, lex::reserved_word::PRINT }, 61 }
+                , { { lex::type::RESERVED, lex::reserved_word::BREAK }, 59 }
+                , { { lex::type::RESERVED, lex::reserved_word::RETURN }, 60 }
+                , { { lex::type::RESERVED, lex::reserved_word::IF }, 63 }
+                , { { lex::type::RESERVED, lex::reserved_word::WHILE }, 65 }
+                } );
+    result.insert( { lex::rule::SLINE, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::INDENT, 0u }, 66 }
+                 );
+    result.insert( { lex::rule::START, tmp } );
+    tmp.clear();
+
+    tmp.insert(  { { lex::type::RESERVED, lex::reserved_word::WHILE }, 67 }
+                 );
+    result.insert( { lex::rule::WHILELINE, tmp } );
+    tmp.clear();
 
     return result;
 }
