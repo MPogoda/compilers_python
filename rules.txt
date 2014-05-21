@@ -1,6 +1,5 @@
 01. {applicable} → {fcall}
 02. {applicable} → {identifier}
-#03. {applicable} → {mcall}
 
 04. {assignment} → {identifier} = {rightside}
 

@@ -1,0 +1,313 @@
+% vim:spelllang=ru,en
+\documentclass[a4paper,10pt,notitlepage,pdftex]{scrreprt}
+
+\usepackage{cmap} % чтобы работал поиск по PDF
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[T2A]{fontenc}
+\usepackage{concrete}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{subfig}
+
+\pdfcompresslevel=9 % сжимать PDF
+\usepackage{pdflscape} % для возможности альбомного размещения некоторых страниц
+\usepackage[pdftex]{hyperref}
+% настройка ссылок в оглавлении для pdf формата
+\hypersetup{unicode=true,
+    pdftitle={Подмножество языка},
+    pdfauthor={Погода Михаил},
+    pdfcreator={pdflatex},
+    pdfsubject={},
+    pdfborder    = {0 0 0},
+    bookmarksopen,
+    bookmarksnumbered,
+    bookmarksopenlevel = 2,
+    pdfkeywords={},
+    colorlinks=true, % установка цвета ссылок в оглавлении
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{listings}
+\lstloadlanguages{Python,C++}
+\lstset{language=Python,frame=tb,basicstyle=\small,commentstyle=\itshape,extendedchars=false}
+
+\usepackage{multicol}
+
+\begin{document}
+\begin{titlepage}
+    \begin{center}
+        \MakeUppercase{Министерство образования и науки Украины}\\
+        \MakeUppercase{Национальный технический университет Украины}\\
+        \MakeUppercase{<<Киевский политехнический институт>>}\\
+        \vspace*{2em}
+
+        Факультет прикладной математики\\
+        Кафедра прикладной математики
+
+        \vfill
+
+        \MakeUppercase{Построение синтаксического анализатора}\\
+        \vspace*{2em}
+
+        Отчёт по лабораторной работе \textnumero~2\\
+        по дисциплине:\\
+        <<Системы автоматизации программирования>>
+    \end{center}
+
+    \vfill
+    \hfill\begin{minipage}{0.3\textwidth}
+        Выполнил студент\\
+        группы КМ-31м\\
+        Погода~М.\,В.
+    \end{minipage}
+
+    \vfill
+    \begin{center}
+        Киев\\
+        2014
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Постановка задачи}
+\label{chap:first}
+    В рамках этой лабораторной работы необходимо спроектировать синтаксический анализатор для подмножества языка
+    программирования \texttt{Python}, которая была описана в предыдущей работе.
+
+    Необходимо использовать алгоритм левой рекурсии (LL(1)).
+    Синтаксический LL"=анализатор --- нисходящий синтаксический анализатор для подмножества контекстно"=свободных
+    грамматик.
+    Он анализирует входной поток слева направо, и строит левый вывод грамматики.
+\chapter{Техническое задание}
+\label{chap:second}
+    \section{Формальное определение исходной грамматики}
+    \label{sec:formal}
+        Исходная грамматика формально описывается четвёркой:
+        \begin{equation}
+            \label{eq:grammar}
+            G = \left( N, \Sigma, P, S \right)
+        \end{equation}
+        , де
+        \begin{itemize}
+            \item $N$ --- алфавит нетерминальных символов (см. стр.~\pageref{para:nonterm});
+            \item $\Sigma$ --- алфавит терминальных символов, содержащий лексемы, полученные путём лексического
+                анализа (см. стр.~\pageref{para:term});
+            \item $P$ --- множество правил синтаксического разбора (см. стр.~\pageref{para:rules});
+            \item $S$ --- начальный символ грамматики (\verb'{start}').
+        \end{itemize}
+
+        \paragraph{Нетерминальные символы грамматики}
+        \label{para:nonterm}
+        \begin{multicols}{3}
+            \begin{enumerate}
+                \item \verb'{applicable}'
+                \item \verb'{assignment}'
+                \item \verb'{class-decl}'
+                \item \verb'{class-list}'
+                \item \verb'{classes}'
+                \item \verb'{comparator-eq}'
+                \item \verb'{comparator-int}'
+                \item \verb'{elseline}'
+                \item \verb'{expr-int}'
+                \item \verb'{fcall}'
+                \item \verb'{ifline}'
+                \item \verb'{input}'
+                \item \verb'{logic-bool}'
+                \item \verb'{logic-int}'
+                \item \verb'{logic-str}'
+                \item \verb'{logic}'
+                \item \verb'{mcall}'
+                \item \verb'{method-decl}'
+                \item \verb'{method-list}'
+                \item \verb'{methods}'
+                \item \verb'{mparams}'
+                \item \verb'{mparam-list}'
+                \item \verb'{operand-int}'
+                \item \verb'{operand-bool}'
+                \item \verb'{operand-str}'
+                \item \verb'{operator-int}'
+                \item \verb'{param-list}'
+                \item \verb'{params}'
+                \item \verb'{rightside}'
+                \item \verb'{sline-list}'
+                \item \verb'{slines}'
+                \item \verb'{sline}'
+                \item \verb'{start}'
+                \item \verb'{whileline}'
+            \end{enumerate}
+        \end{multicols}
+
+        \paragraph{Терминальные символы грамматики}
+        \label{para:term}
+        \begin{multicols}{3}
+            \begin{enumerate}
+                \item \verb'('
+                \item \verb')'
+                \item \verb'+'
+                \item \verb'-'
+                \item \verb'*'
+                \item \verb'/'
+                \item \verb':'
+                \item \verb'.'
+                \item \verb'='
+                \item \verb'<'
+                \item \verb'>'
+                \item \verb'!'
+                \item \verb'def'
+                \item \verb'class'
+                \item \verb'if'
+                \item \verb'else'
+                \item \verb'while'
+                \item \verb'break'
+                \item \verb'retur'
+                \item \verb'print'
+                \item \verb'input'
+                \item \verb'{d-const}' --- любое вещественное число.
+                \item \verb'{b-const}' --- \verb'True' / \verb'False'.
+                \item \verb'{s-const}' --- любая строка.
+                \item \verb'{identifier}' --- любой идентификатор.
+                \item \verb'{newline}' --- конец строки.
+                \item \verb'{indent}' --- увеличение отступа.
+                \item \verb'{dedent}' --- уменьшение отступа.
+                \item $\varepsilon$
+            \end{enumerate}
+        \end{multicols}
+
+        \paragraph{Правила исходной грамматики}
+        \label{para:rules}
+            Правило представляются в виде $A \rightarrow B$.
+            \begin{enumerate}
+                \item \verb'{applicable} ' $\rightarrow$ \verb' {fcall}'
+                \item \verb'{applicable} ' $\rightarrow$ \verb' {identifier}'
+
+                \stepcounter{enumi}
+
+                \item \verb'{assignment} ' $\rightarrow$ \verb' {identifier} = {rightside}'
+                \item \verb'{class-decl} ' $\rightarrow$ \verb' class {identifier}:{newline} {indent} {methods} {dedent}'
+                \item \verb'{class-list} ' $\rightarrow$ \verb' {classes}'
+                \item \verb'{class-list} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{classes} ' $\rightarrow$ \verb' {class-decl} {class-list}'
+                \item \verb'{comparator-eq} ' $\rightarrow$ \verb' !='
+                \item \verb'{comparator-eq} ' $\rightarrow$ \verb' =='
+                \item \verb'{comparator-int} ' $\rightarrow$ \verb' !='
+                \item \verb'{comparator-int} ' $\rightarrow$ \verb' <'
+                \item \verb'{comparator-int} ' $\rightarrow$ \verb' =='
+                \item \verb'{comparator-int} ' $\rightarrow$ \verb' >'
+                \item \verb'{elseline} ' $\rightarrow$ \verb' else : {newline} {indent} {slines} {dedent}'
+                \item \verb'{elseline} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{expr-int} ' $\rightarrow$ \verb' {operand-int}'
+                \item \verb'{expr-int} ' $\rightarrow$ \verb' {operand-int} {operator-int} {operand-int}'
+                \item \verb'{fcall} ' $\rightarrow$ \verb' {identifier} ( {params} )'
+                \item \verb'{ifline} ' $\rightarrow$ \verb' if {logic} : {newline} {indent} {slines} {dedent} {elseline}'
+                \item \verb'{input} ' $\rightarrow$ \verb' input ( )'
+                \item \verb'{logic-bool} ' $\rightarrow$ \verb' {operand-bool}'
+                \item \verb'{logic-bool} ' $\rightarrow$ \verb' {operand-bool} {comparator-eq} {operand-bool}'
+                \item \verb'{logic-int} ' $\rightarrow$ \verb' {operand-int} {comparator-int} {operand-int}'
+                \item \verb'{logic-str} ' $\rightarrow$ \verb' {operand-str} {comparator-eq} {operand-str}'
+                \item \verb'{logic} ' $\rightarrow$ \verb' {logic-bool}'
+                \item \verb'{logic} ' $\rightarrow$ \verb' {logic-int}'
+                \item \verb'{logic} ' $\rightarrow$ \verb' {logic-str}'
+                \item \verb'{mcall} ' $\rightarrow$ \verb' {applicable} . {fcall}'
+                \item \verb'{method-decl} ' $\rightarrow$ \verb' def {identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}'
+                \item \verb'{method-list} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{method-list} ' $\rightarrow$ \verb' {methods}'
+                \item \verb'{methods} ' $\rightarrow$ \verb' {method-decl} {method-list}'
+                \item \verb'{mparams} ' $\rightarrow$ \verb' {identifier} {mparam-list}'
+                \item \verb'{mparam-list} ' $\rightarrow$ \verb' , {mparams}'
+                \item \verb'{mparam-list} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{operand-int} ' $\rightarrow$ \verb' {identifier}'
+                \item \verb'{operand-int} ' $\rightarrow$ \verb' {int-const}'
+                \item \verb'{operand-bool} ' $\rightarrow$ \verb' {identifier}'
+                \item \verb'{operand-bool} ' $\rightarrow$ \verb' {bool-const}'
+                \item \verb'{operand-str} ' $\rightarrow$ \verb' {identifier}'
+                \item \verb'{operand-str} ' $\rightarrow$ \verb' {str-const}'
+                \item \verb'{operator-int} ' $\rightarrow$ \verb' *'
+                \item \verb'{operator-int} ' $\rightarrow$ \verb' +'
+                \item \verb'{operator-int} ' $\rightarrow$ \verb' -'
+                \item \verb'{operator-int} ' $\rightarrow$ \verb' /'
+                \item \verb'{param-list} ' $\rightarrow$ \verb' , {rightside} {param-list}'
+                \item \verb'{param-list} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{params} ' $\rightarrow$ \verb' {rightside} { param-list}'
+                \item \verb'{params} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {expr-int}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {input}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {logic}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {mcall}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {fcall}'
+                \item \verb'{rightside} ' $\rightarrow$ \verb' {str-const}'
+                \item \verb'{sline-list} ' $\rightarrow$ \verb' {eps}'
+                \item \verb'{sline-list} ' $\rightarrow$ \verb' {slines}'
+                \item \verb'{slines} ' $\rightarrow$ \verb' {sline} {sline-list}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' break {newline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' return {rightside} {newline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' print ( {rightside} ) {newline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' {assignment} {newline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' {ifline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' {mcall} {newline}'
+                \item \verb'{sline} ' $\rightarrow$ \verb' {whileline}'
+                \item \verb'{start} ' $\rightarrow$ \verb' {indent} {classes} {mcall} {newline} {dedent}'
+                \item \verb'{whileline} ' $\rightarrow$ \verb' while {logic}: {newline} {indent} {slines} {dedent}'
+            \end{enumerate}
+\chapter{Описание логической структуры программы}
+\label{chap:third}
+    Для синтаксического анализа используется LL(1) алгоритм.
+    В качестве исходных данных используются лексемы, которые были выделены с помощью лексического анализатора.
+
+    Эти лексемы подвергаются небольшой предварительной обработке: в нужные места добавляется лексема \verb'{dedent}',
+    которая характеризует уменьшение отступа по сравнению с предыдущей строкой.
+    Этот шаг был добавлен так как рассматриваемый язык использует отступы в качестве границ семантических блоков.
+
+    Для корректной работы LL(1) парсера необходимо заранее построить таблицу переходов, показывающую, какие правила
+    возможно применить и заменить текущий нетерминальный символ на вершине стека.
+    Поскольку не всегда есть возможность однозначно определить номер правила, была использована стратегия возврата:
+    если есть несколько правил, которые можно применить согласно таблице, то синтаксический анализатор пытается
+    разобрать цепочку символов, используя каждое из доступных правил поочерёдно.
+    Если во время разбора возникает ошибка, то это означает, что правило было выбрано некорректно и следует
+    воспользоваться другим.
+    Если же синтаксические ошибки обнаруживаются при применении всех доступных в данной ситуации правил, то это
+    означает, что с этой позиции нет правильного разбора в рамках грамматики.
+
+    В качестве результата работы программное обеспечение выдаёт либо последовательность правил, которые были применены
+    при успешном разборе, либо сообщение об ошибке.
+
+\chapter{Тестовые примеры}
+\label{chap:fourth}
+    \section{Пример без синтаксических ошибок}
+    \label{sec:ex1}
+        \lstinputlisting{../test1.py}
+        Вывод программы:
+        \[
+            66 \rightarrow 8 \rightarrow 5 \rightarrow 33 \rightarrow 30 \rightarrow 34 \rightarrow 35 \rightarrow 34 \rightarrow 36 \rightarrow 58 \rightarrow 63 \rightarrow 20 \rightarrow 27 \rightarrow 24 \rightarrow 37 \rightarrow 13 \rightarrow \dots
+        \]
+
+    \section{Пример с синтаксической ошибкой}
+    \label{sec:ex2}
+        \begin{lstlisting}
+            class class class class:
+        \end{lstlisting}
+\chapter{Выводы}
+\label{chap:concl}
+    Лексемы, полученные на фазе лексического анализа, используются для построения синтаксической свёртки.
+    В результате этой операции получаем либо синтаксический разбор исходного текста, либо уведомление про ошибку.
+
+    В данной работе был реализован синтаксический анализатор на базе LL(1) грамматики, показаны основные свойства
+    этого алгоритма, приведены корректный и некорректный примеры.
+
+    Стоит отметить, что в данной работе в классический алгоритм LL(1) была добавлена возможность отката, когда
+    существует неопределённость в таблице переходов.
+    Для нейтрализации этого неклассического поведения можно использовать LL(k) ($k > 1$) грамматику , так чтобы не
+    было неоднозначностей при переходах.
+    Однако этот метод требует значительно большего объёма работ для построения таблицы переходов (которая в этом
+    случае будет многомерной).
+\chapter*{Приложение. Исходный текст}
+    \lstset{language=C++,basicstyle=\scriptsize}
+    \lstinputlisting{../syntax.h}
+\end{document}
