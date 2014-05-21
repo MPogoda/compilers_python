@@ -1,19 +1,28 @@
 #include "syntax.h"
 
+#ifdef NDEBUG
+    #define DEBUG(a)
+    #define DBG(a)
+#else
+    #include <iostream>
+    #define DEBUG(a) std::cout << #a << " = " << (a) << '\n'
+    #define DBG(a) std::cout << __LINE__ << " : " << a << '\n';
+#endif
 namespace sap
 {
 void push_rule( Stack& st, const int rule_number )
 {
+    DEBUG( rule_number );
     switch (rule_number) {
         case 1:
-            st.push( { lex::type::RULE, lex::rule::APPLICABLE } );
+            st.push( { lex::type::RULE, lex::rule::FCALL } );
             break;
         case 2:
             st.push( { lex::type::IDENTIFIER, "" } );
             break;
-        case 3:
-            st.push( { lex::type::RULE, lex::rule::MCALL } );
-            break;
+        // case 3:
+        //     st.push( { lex::type::RULE, lex::rule::MCALL } );
+        //     break;
         case 4:
             st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
             st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
@@ -281,6 +290,9 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::RULE, lex::rule::LOGIC } );
             st.push( { lex::type::RESERVED, lex::reserved_word::WHILE } );
             break;
+        case 68:
+            st.push( { lex::type::RULE, lex::rule::FCALL } );
+            break;
 
         default:
             assert( !"NO SUCH RULE!" );
@@ -318,6 +330,8 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
     Queue result;
     while (ss.size() > 1) {
         const bool atEnd = begin == end;
+        if (!atEnd) DEBUG( *begin );
+        DEBUG( ss.top() );
 
         if (ss.top().type_ == lex::type::COUNT ) {
             break;
@@ -347,8 +361,10 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                 result.push( rule );
                 push_rule( ss, rule );
             } else { // length > 1
+                DBG( "TRYING" );
                 if (!atEnd)
                 for (; eq.second != eq.first; ++eq.first) {
+                    DEBUG( std::distance( eq.first, eq.second ) );
                     Stack newSS{ ss };
                     const uint rule = eq.first->second;
                     push_rule( newSS, rule );
@@ -362,6 +378,8 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                         }
                         return result;
                     } catch (std::logic_error& ex) {
+                        DBG( "FAILED" );
+                        DEBUG( rule );
                         continue;
                     }
                 }
@@ -379,6 +397,8 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                         }
                         return result;
                     } catch (std::logic_error& ex) {
+                        DBG( "FAILED" );
+                        DEBUG( rule );
                         continue;
                     }
                 }
@@ -406,7 +426,8 @@ Table createTable()
 
     tmp.insert( { { { lex::type::IDENTIFIER, "" }, 1 }
                 , { { lex::type::IDENTIFIER, "" }, 2 }
-                , { { lex::type::IDENTIFIER, "" }, 3 } } );
+                // , { { lex::type::IDENTIFIER, "" }, 3 }
+                } );
     result.insert( { lex::rule::APPLICABLE, tmp } );
     tmp.clear();
 
@@ -576,6 +597,7 @@ Table createTable()
     tmp.insert( { { { lex::type::IDENTIFIER, "" }, 51 }
                 , { { lex::type::IDENTIFIER, "" }, 53 }
                 , { { lex::type::IDENTIFIER, "" }, 54 }
+                , { { lex::type::IDENTIFIER, "" }, 68 }
                 , { { lex::type::D_CONST, 0u }, 51 }
                 , { { lex::type::D_CONST, 0u }, 53 }
                 , { { lex::type::RESERVED, lex::reserved_word::INPUT }, 52 }
