@@ -1,5 +1,7 @@
 #include "syntax.h"
 
+#include <sstream>
+
 #ifdef NDEBUG
     #define DEBUG(a)
     #define DBG(a)
@@ -325,7 +327,16 @@ bool operator==( const lex& lhs, const lex& rhs )
     return false;
 }
 
-Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
+std::string builtError( const uint newline )
+{
+    std::stringstream ss;
+    ss << "Syntax error at ";
+    ss << newline << " line!.";
+
+    return ss.str();
+}
+
+Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss, uint newline )
 {
     Queue result;
     while (ss.size() > 1) {
@@ -338,11 +349,16 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
         } else if (ss.top().type_ == lex::type::EPS ) {
             ss.pop();
         } else if (ss.top() == *begin) {
+            if (ss.top().type_ == lex::type::NEWLINE) {
+                newline = boost::get< uint >( begin->value_ );
+            }
+
             ++begin;
             ss.pop();
         } else if (lex::type::RULE == ss.top().type_) {
             const auto table_top = table.find( boost::get< lex::rule >( ss.top().value_ ) );
-            if (table.end() == table_top) throw std::logic_error{ "Cannot find rule!" };
+
+            if (table.end() == table_top) throw std::logic_error{ builtError( newline ) };
             std::pair< MIterator, MIterator > eq;
             if (!atEnd) eq = table_top->second.equal_range( *begin );
             std::pair< MIterator, MIterator > eq_eps = table_top->second.equal_range( { lex::type::EPS, false } );
@@ -352,7 +368,7 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
             const int length_eps = std::distance( eq_eps.first, eq_eps.second );
             const int sum_length = length + length_eps;
 
-            if (0 == sum_length) throw std::logic_error{ "asd" };
+            if (0 == sum_length) throw std::logic_error{ builtError( newline ) };
             ss.pop();
 
             if (1 == sum_length) {
@@ -369,7 +385,7 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                     const uint rule = eq.first->second;
                     push_rule( newSS, rule );
                     try {
-                        Queue subQueue = parse( table, begin, end, std::move( newSS ) );
+                        Queue subQueue = parse( table, begin, end, std::move( newSS ), newline );
                         result.push( rule );
 
                         while (!subQueue.empty()) {
@@ -389,7 +405,7 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                     const uint rule = eq_eps.first->second;
                     push_rule( newSS, rule );
                     try {
-                        Queue subQueue = parse( table, begin, end, std::move( newSS ) );
+                        Queue subQueue = parse( table, begin, end, std::move( newSS ), newline);
                         result.push( rule );
                         while (!subQueue.empty()) {
                             result.push( subQueue.front());
@@ -404,11 +420,11 @@ Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss)
                 }
 
 
-                throw std::logic_error{ "Cannot find rule" };
+                throw std::logic_error{ builtError( newline ) };
             }
 
         } else {
-            throw std::logic_error{ "Cannot find rule!" };
+            throw std::logic_error{ builtError( newline ) };
         }
     }
 

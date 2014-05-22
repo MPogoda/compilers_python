@@ -49,6 +49,6 @@ using Queue = std::queue< uint >;
 
 void push_rule( Stack& st, const int rule_number );
 
-Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss );
+Queue parse( const Table& table, LIterator begin, const LIterator end, Stack ss, uint newline = 0 );
 Table createTable();
 } // namespace sap
