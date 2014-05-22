@@ -170,7 +170,7 @@
                 \item \verb'retur'
                 \item \verb'print'
                 \item \verb'input'
-                \item \verb'{d-const}' --- любое вещественное число.
+                \item \verb'{d-const}' --- вещественное число.
                 \item \verb'{b-const}' --- \verb'True' / \verb'False'.
                 \item \verb'{s-const}' --- любая строка.
                 \item \verb'{identifier}' --- любой идентификатор.
@@ -191,7 +191,7 @@
                 \stepcounter{enumi}
 
                 \item \verb'{assignment} ' $\rightarrow$ \verb' {identifier} = {rightside}'
-                \item \verb'{class-decl} ' $\rightarrow$ \verb' class {identifier}:{newline} {indent} {methods} {dedent}'
+                \item \verb'{class-decl}'$\rightarrow$\verb'class{identifier}:{newline}{indent}{methods}{dedent}'
                 \item \verb'{class-list} ' $\rightarrow$ \verb' {classes}'
                 \item \verb'{class-list} ' $\rightarrow$ \verb' {eps}'
                 \item \verb'{classes} ' $\rightarrow$ \verb' {class-decl} {class-list}'
@@ -206,7 +206,9 @@
                 \item \verb'{expr-int} ' $\rightarrow$ \verb' {operand-int}'
                 \item \verb'{expr-int} ' $\rightarrow$ \verb' {operand-int} {operator-int} {operand-int}'
                 \item \verb'{fcall} ' $\rightarrow$ \verb' {identifier} ( {params} )'
-                \item \verb'{ifline} ' $\rightarrow$ \verb' if {logic} : {newline} {indent} {slines} {dedent} {elseline}'
+                \item \verb'{ifline}'$\rightarrow$
+
+                    \verb'if{logic}:{newline}{indent}{slines}{dedent}{elseline}'
                 \item \verb'{input} ' $\rightarrow$ \verb' input ( )'
                 \item \verb'{logic-bool} ' $\rightarrow$ \verb' {operand-bool}'
                 \item \verb'{logic-bool} ' $\rightarrow$ \verb' {operand-bool} {comparator-eq} {operand-bool}'
@@ -216,7 +218,9 @@
                 \item \verb'{logic} ' $\rightarrow$ \verb' {logic-int}'
                 \item \verb'{logic} ' $\rightarrow$ \verb' {logic-str}'
                 \item \verb'{mcall} ' $\rightarrow$ \verb' {applicable} . {fcall}'
-                \item \verb'{method-decl} ' $\rightarrow$ \verb' def {identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}'
+                \item \verb'{method-decl} ' $\rightarrow$
+
+                    \verb'def{identifier}({mparams}):{newline}{indent}{slines}{dedent}'
                 \item \verb'{method-list} ' $\rightarrow$ \verb' {eps}'
                 \item \verb'{method-list} ' $\rightarrow$ \verb' {methods}'
                 \item \verb'{methods} ' $\rightarrow$ \verb' {method-decl} {method-list}'
@@ -254,7 +258,9 @@
                 \item \verb'{sline} ' $\rightarrow$ \verb' {mcall} {newline}'
                 \item \verb'{sline} ' $\rightarrow$ \verb' {whileline}'
                 \item \verb'{start} ' $\rightarrow$ \verb' {indent} {classes} {mcall} {newline} {dedent}'
-                \item \verb'{whileline} ' $\rightarrow$ \verb' while {logic}: {newline} {indent} {slines} {dedent}'
+                \item \verb'{whileline} ' $\rightarrow$
+
+                    \verb' while {logic}: {newline} {indent} {slines} {dedent}'
             \end{enumerate}
 \chapter{Описание логической структуры программы}
 \label{chap:third}
@@ -285,7 +291,7 @@
         \lstinputlisting{../test1.py}
         Вывод программы:
         \[
-            66 \rightarrow 8 \rightarrow 5 \rightarrow 33 \rightarrow 30 \rightarrow 34 \rightarrow 35 \rightarrow 34 \rightarrow 36 \rightarrow 58 \rightarrow 63 \rightarrow 20 \rightarrow 27 \rightarrow 24 \rightarrow 37 \rightarrow 13 \rightarrow \dots
+            66 \rightarrow 8 \rightarrow 5 \rightarrow 33 \rightarrow 30 \rightarrow 34 \rightarrow 35 \rightarrow 34 \rightarrow 36 \rightarrow 58 \rightarrow 63 \rightarrow 20 \rightarrow 27 \rightarrow 24 \rightarrow \dots
         \]
 
     \section{Пример с синтаксической ошибкой}
