@@ -64,7 +64,9 @@ PythonGrammar::PythonGrammar()
     identifier_rule  = identifier_type
                     >> identifier;
 
-    constant_type    = eps                      [ _val = lex::type::CONST ];
+    s_type = eps [ _val = lex::type::S_CONST ];
+    d_type = eps [ _val = lex::type::D_CONST ];
+    b_type = eps [ _val = lex::type::B_CONST ];
     double_constant %= double_;
     // bool constant is either True or False
     bool_constant    = lit("True")              [ _val = true ]
@@ -74,11 +76,10 @@ PythonGrammar::PythonGrammar()
                     >> *(char_ - char_('"'))
                     >> lit("\"");
     // constant is either double, or bool, or string constant
-    constant_rule   %= constant_type
-                    >> ( double_constant
-                       | bool_constant
-                       | string_constant
-                       );
+    constant_rule   %=
+        ( d_type >> double_constant )
+    |   ( b_type >> bool_constant )
+    |   ( s_type >> string_constant );
 
     // matches all lexemes, that a visible (not indent & newline )
     // it's either reserved word, or constant, or identifier, or symbol

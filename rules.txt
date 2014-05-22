@@ -1,0 +1,135 @@
+01. {applicable} → {fcall}
+02. {applicable} → {identifier}
+
+04. {assignment} → {identifier} = {rightside}
+
+05. {class-decl} → class {identifier}:{newline} {indent} {methods} {dedent}
+
+06. {class-list} → {classes}
+07. {class-list} → {eps}
+
+08. {classes} → {class-decl} {class-list}
+
+09. {comparator-eq} → !=
+10. {comparator-eq} → ==
+
+11. {comparator-int} → !=
+12. {comparator-int} → <
+13. {comparator-int} → ==
+14. {comparator-int} → >
+
+15. {elseline} → else : {newline} {indent} {slines} {dedent}
+16. {elseline} → {eps}
+
+17. {expr-int} → {operand-int}
+18. {expr-int} → {operand-int} {operator-int} {operand-int}
+
+19. {fcall} → {identifier} ( {params} )
+
+20. {ifline} → if {logic} : {newline} {indent} {slines} {dedent} {elseline}
+
+21. {input} → input ( )
+
+22. {logic-bool} → {operand-bool}
+23. {logic-bool} → {operand-bool} {comparator-eq} {operand-bool}
+
+24. {logic-int} → {operand-int} {comparator-int} {operand-int}
+
+25. {logic-str} → {operand-str} {comparator-eq} {operand-str}
+
+26. {logic} → {logic-bool}
+27. {logic} → {logic-int}
+28. {logic} → {logic-str}
+
+29. {mcall} → {applicable} . {fcall}
+
+30. {method-decl} → def {identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}
+
+31. {method-list} → {eps}
+32. {method-list} → {methods}
+
+33. {methods} → {method-decl} {method-list}
+
+34. {mparams} → {identifier} {mparam-list}
+
+35. {mparam-list} → , {mparams}
+36. {mparam-list} → {eps}
+
+37. {operand-int} → {identifier}
+38. {operand-int} → {int-const}
+39. {operand-bool} → {identifier}
+40. {operand-bool} → {bool-const}
+41. {operand-str} → {identifier}
+42. {operand-str} → {str-const}
+
+43. {operator-int} → *
+44. {operator-int} → +
+45. {operator-int} → -
+46. {operator-int} → /
+
+47. {param-list} → , {rightside} {param-list}
+48. {param-list} → {eps}
+
+49. {params} → {rightside} { param-list}
+50. {params} → {eps}
+
+51. {rightside} → {expr-int}
+52. {rightside} → {input}
+53. {rightside} → {logic}
+54. {rightside} → {mcall}
+99. {rightside} → {fcall}
+55. {rightside} → {str-const}
+
+56. {sline-list} → {eps}
+57. {sline-list} → {slines}
+
+58. {slines} → {sline} {sline-list}
+
+59. {sline} → break {newline}
+60. {sline} → return {rightside} {newline}
+61. {sline} → print ( {rightside} ) {newline}
+62. {sline} → {assignment} {newline}
+63. {sline} → {ifline}
+64. {sline} → {mcall} {newline}
+65. {sline} → {whileline}
+
+66. {start} → {indent} {classes} {mcall} {newline} {dedent}
+
+67. {whileline} → while {logic}: {newline} {indent} {slines} {dedent}
+
+
+
+{applicable}        {identifier}( 01, 02, 03 )
+{assignment}        {identifier}( 04 )
+{class-decl}        class( 05 )
+{class-list}        class( 06 ) {eps}( 07 )
+{classes}           class( 08 )
+{comparator-eq}     !( 09 ) =( 10 )
+{comparator-int}    !( 11 ) <( 12 ) =( 13 ) >( 14 )
+{elseline}          else( 15 ) {eps}( 16 )
+{expr-int}          {identifier}( 17, 18 ) {int-const}(17, 18 )
+{fcall}             {identifier}( 19 )
+{ifline}            if( 20 )
+{input}             input( 21 )
+{logic-bool}        {identifier}( 22, 23 ) {bool-const}( 22, 23 )
+{logic-int}         {identifier}( 24 ) {int-const}( 24 )
+{logic-str}         {identifier}( 25 ) {str-const}( 25 )
+{logic}             {identifier}( 26, 27, 28 ) {bool-const}( 26 ) {int-const}( 27 ) {str-const}( 28 )
+{mcall}             {identifier}( 29 )
+{method-decl}       def( 30 )
+{method-list}       {eps}( 31 ) def( 32 )
+{methods}           def( 33 )
+{mparams}           {identifier}(34)
+{mparam-list}       ,( 35 ) {eps}( 36 )
+{operand-int}       {identifier}( 37 ) {int-const}( 38 )
+{operand-bool}      {identifier}( 39 ) {bool-const}( 40 )
+{operand-str}       {identifier}( 41 ) {str-const}( 42 )
+{operator-int}      *( 43 ) +( 44 ) -( 45 ) /( 46 )
+{param-list}        ,( 47 ) {eps}( 48 )
+{params}            {identifier}( 49 ) {int-const}( 49 ) {str-const}( 49 ) {bool-const}( 49 ) input( 49 ) {eps}( 50 )
+{rightside}         {identifier}( 51, 53, 54, 68) {int-const}( 51, 53 ) input( 52 ) {bool-const}( 53 ) {str-const}( 53, 55 )
+{sline-list}        {eps}( 56 ) break( 57 ) return( 57 ) print( 57 ) {identifier}( 57 ) if( 57 ) while( 57 )
+{slines}            break( 58 ) return( 58 ) print( 58 ) {identifier}( 58 ) if( 58 ) while( 58 )
+{sline}             break( 59 ) return( 60 ) print( 61 ) {identifier}( 62, 64 ) if( 63 ) while( 65 )
+{start}             {indent}( 66 )
+{whileline}         while( 67 )

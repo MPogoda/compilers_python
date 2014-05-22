@@ -3,6 +3,7 @@
 
 #include "parse.h"
 #include "lexeme.h"
+#include "syntax.h"
 
 #include <fstream>
 #include <streambuf>
@@ -14,6 +15,12 @@ int main( int argc, char* argv[] )
                   << argv[0] << "[ file to parse ]\n";
         return 1;
     }
+
+    const sap::Table table = sap::createTable();
+    const sap::Stack ss{ { { sap::lex::type::COUNT, 0u }
+                         , { sap::lex::type::RULE, sap::lex::rule::START }
+                         } };
+
     while (1 < argc--) {
         std::ifstream in{ argv[ argc ] };
         in.unsetf( std::ios::skipws );
@@ -26,9 +33,21 @@ int main( int argc, char* argv[] )
             for (const auto& lexem : lexems ) {
                 std::cout << lexem << '\n';
             }
+
+            sap::Queue queue = sap::parse( table, lexems.begin(), lexems.end(), ss );
+            std::cout << "Rule application sequence:\n";
+            std::cout << queue.front();
+            queue.pop();
+            while (!queue.empty()) {
+                const auto rule = queue.front();
+                queue.pop();
+                std::cout << " → " << rule;
+            }
+            std::cout << '\n';
         } catch ( std::exception& ex ) {
             std::cerr << ex.what();
         }
+
 
         std::cout << "\n\n";
     }

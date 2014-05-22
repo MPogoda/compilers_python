@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <stack>
 
 #include "lexeme.h"
 #include "lines_grammar.h"
@@ -33,6 +34,9 @@ Lexems parse( const Container input )
     }
 
     uint i{ 0 };
+    std::stack< uint > indents;
+    result.push_back( { lex::type::INDENT, 0u } );
+    indents.push( 0 );
     for (const auto& line : ls ) {
         ++i;
         Lexems tempResult;
@@ -43,12 +47,35 @@ Lexems parse( const Container input )
                 uint column = std::distance( std::begin( line ), beg);
                 throw std::invalid_argument{ createErrorMessage( line, i, column ) };
         }
+
+        if (tempResult.empty()) continue;
+
+        // Compare indent levels of previous line and this one.
+        const auto indent = tempResult.front();
+        tempResult.pop_front();
+        assert( indent.type_ == lex::type::INDENT );
+        const uint new_indent = boost::get< uint >( indent.value_ );
+        // If indent changed, push lexem.
+        if ( new_indent != indents.top()) {
+            if (new_indent < indents.top()) {
+                while (new_indent < indents.top()) {
+                    result.push_back( { lex::type::DEDENT, indents.top() } );
+                    indents.pop();
+                }
+            } else {
+                result.push_back( indent );
+                indents.push( new_indent );
+            }
+        }
+
         for (const auto& lexem : tempResult ) {
             result.push_back( lexem );
         }
 
         result.push_back( { lex::type::NEWLINE, i } );
     }
+    result.push_back( { lex::type::DEDENT, 0u } );
+    assert( indents.size() == 1 );
 
     return std::move( result );
 }

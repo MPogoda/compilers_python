@@ -15,7 +15,6 @@ class someotherclass:
         z = c.bar( a, b )
         c.foo( z )
 
-
 class main:
     def run( self ):
         m = someotherclass()
@@ -24,6 +23,5 @@ class main:
         a = 1.53
         c = "asdd{}fgkjhns sdf asd "
         d = False
-
 
 main().run()
