@@ -1,5 +1,51 @@
 #include <boost/variant.hpp>
 
+//  Class:
+//      has name
+//      has class_used_names
+//      has method_list
+//      Constructor( node, used_names ):
+//          ASSERT that node has rule CLASS_DECL
+//          Get class name from it's first child
+//          ASSERT that this name isn't used
+//
+//          Create class-used-names
+//          Populate it with used_names + class_name
+//
+//          Iterate over all other children (should be 1+ because of grammar):
+//              (maybe don't go into last node because it should be EPS)
+//              Create Method from (node, class_used_names)
+//              Add method->name to class_used_names
+//              Add Method to method_list
+//
+//  Method:
+//      has name
+//      has method_used_names
+//      has statements
+//      Constructor( node, class_used_names ):
+//          ASSERT that node is METHOD_DECL
+//          Get method name from first child
+//          ASSERT method name isn't used
+//
+//          method_used_names = class_used_names + method_name
+//
+//          Get method parameters from second child
+//          Iterate over parameters:
+//              ASSERT that paramter_name isn't used
+//              method_used_names += parameter_name
+//
+//          Go to the last child: SLINES
+//          Iteratate over all its children:
+//              switch rule:
+//                  break: REPORT ERROR
+//                  return: create RETURN( node, method_used_names (const)), expect no more rules
+//                  print: create PRINT( node, method_used_names (const))
+//                  assignment: create ASSIGNMENT( node, method_used_names (non-const))
+//                  ifline: create IF_STMT( node, method_used_names (const))
+//                  whileline: create while_stmt( node, method_used_names (const))
+//                  mcall: create METHOD_CALL( node, method_used_names
+//
+
 #include <vector>
 
 #include "parse.h"
