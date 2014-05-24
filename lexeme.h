@@ -93,6 +93,8 @@ struct lex
         , START
         , WHILELINE
 
+        , IDENTIFIER
+
         , COUNT
         }; // enum class rule
 

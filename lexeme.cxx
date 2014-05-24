@@ -74,6 +74,7 @@ const char* const lex::rule_STRINGS[] = { "{applicable}"
                                         , "{sline}"
                                         , "{start}"
                                         , "{whileline}"
+                                        , "{identifier}"
 
                                         }; // rule_STRINGS
 
