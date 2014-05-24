@@ -57,5 +57,70 @@ struct logic_string
 
 using logic = boost::variant< logic_double, logic_bool, logic_string >;
 
+using constructor = identifier;
+
+using applicable = identifier;
+
+struct method_call {
+    applicable lhs;
+    identifier rhs;
+    // params
+};
+
+enum class reserved : uint8_t { READ, WRITE, BREAK };
+
+using rightside = boost::variant< logic, expr_int, reserved, constructor, method_call, string_constant >;
+
+struct assignment
+{
+    identifier lhs;
+    rightside rhs;
+};
+
+struct returnline { rightside what; };
+
+struct ifline;
+struct whileline;
+using sline = boost::variant< assignment, reserved, returnline, ifline, whileline, method_call>;
+
+struct slines {
+    std::vector< sline > lines;
+    identifiers locals;
+    const identifiers inherited;
+
+    slines( const identifiers i_inherited ) : inherited{ i_inherited } {}
+
+};
+
+
+struct ifline {
+    logic lhs;
+    slines thenpart;
+    slines elsepart;
+};
+
+struct whileline {
+    logic condition;
+    slines body;
+};
+
+struct method {
+    identifier name;
+    identifiers params;
+    identifiers ids;
+    slines body;
+};
+
+struct classdecl {
+    identifier name;
+    identifiers methods;
+    std::vector< method > method_definitions;
+};
+
+struct program {
+    identifiers classes;
+    std::vector< classdecl > class_decls;
+    method_call main;
+};
 
 } // namespace sap
