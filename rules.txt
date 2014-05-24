@@ -77,7 +77,7 @@
 52. {rightside} → {input}
 53. {rightside} → {logic}
 54. {rightside} → {mcall}
-99. {rightside} → {fcall}
+68. {rightside} → {fcall}
 55. {rightside} → {str-const}
 
 56. {sline-list} → {eps}
@@ -97,7 +97,26 @@
 
 67. {whileline} → while {logic}: {newline} {indent} {slines} {dedent}
 
+69. {identifier} → {id}
 
+//  create node
+//  get its rule name
+//  get number of childs
+//  if N == -1
+//      it's an epsilon leaf
+//      nop
+//  elseif N == 0
+//      It's a leaf!
+//      skip over input until have found non-reserved lexeme
+//      set it as value
+//  else
+//      it isn't leaf
+//      create vector with N elements (children)
+//      iterate over N children
+//          recursively call the function
+//          store its return value in child[ i ]
+//  return node
+//
 
 {applicable}        {identifier}( 01, 02, 03 )
 {assignment}        {identifier}( 04 )
