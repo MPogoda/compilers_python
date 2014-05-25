@@ -17,9 +17,11 @@ struct node
     using nodes = std::vector< node >;
     using value = boost::variant< lex, nodes >;
     value value_;
+
+    node( Queue& i_queue, LIterator& i_it );
+
+    node() = delete;
 };
 
 std::ostream& operator<<( std::ostream& out, const node& root);
-
-node createTree( Queue& i_queue, LIterator& i_it);
 } // namespace sap

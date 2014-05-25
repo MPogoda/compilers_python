@@ -4,7 +4,8 @@
 
 namespace sap
 {
-namespace {
+namespace
+{
 class node_printer
 {
 public:
@@ -37,16 +38,6 @@ private:
         }
     }
 };
-
-} // namespace
-std::ostream& operator<<( std::ostream& out, const node& root)
-{
-    node_printer{ out }.print( root );
-    return out;
-}
-
-namespace
-{
 // get leftside of rule
 lex::rule getRule( const uint i_ruleNumber )
 {
@@ -324,23 +315,28 @@ lex skip( LIterator& i_it ) {
 
     return *i_it++;
 }
-} // namespace
 
-node createTree( Queue& i_queue, LIterator& i_it )
+} // namespace
+std::ostream& operator<<( std::ostream& out, const node& root)
+{
+    node_printer{ out }.print( root );
+    return out;
+}
+
+node::node( Queue& i_queue, LIterator& i_it )
 {
     assert(!i_queue.empty());
 
     const auto rule = i_queue.front();
     i_queue.pop();
 
-    node root;
-    root.rule_ = getRule( rule );
+    rule_ = getRule( rule );
 
     const auto N = getCount( rule );
     if (0 > N) {
-        root.value_ = lex{ lex::type::EPS, false };
+        value_ = lex{ lex::type::EPS, false };
     } else if (0 == N) {
-        root.value_ = skip( i_it );
+        value_ = skip( i_it );
 
         switch( rule) {
             case 9:
@@ -355,16 +351,15 @@ node createTree( Queue& i_queue, LIterator& i_it )
                 //noop
         }
     } else {
-        auto nodes = node::nodes( N );
+        auto nodes = node::nodes( );
+        nodes.reserve( N );
 
         for (int i = 0; N != i; ++i) {
-            nodes[ i ] = createTree( i_queue, i_it );
+            nodes.emplace_back( node{ i_queue, i_it } );
         }
 
-        root.value_ = nodes;
+        value_ = nodes;
     }
-
-    return root;
 }
 
 } // namespace sap
