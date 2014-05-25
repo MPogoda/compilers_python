@@ -20,15 +20,16 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::RULE, lex::rule::FCALL } );
             break;
         case 2:
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER } );
+            st.push( { lex::type::IDENTIFIER, "" } );
             break;
         // case 3:
         //     st.push( { lex::type::RULE, lex::rule::MCALL } );
         //     break;
         case 4:
+            st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
-            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::SYMBOL, lex::symbol::ASSIGN } );
+            st.push( { lex::type::RULE, lex::rule::NEW_IDENTIFIER} );
             break;
         case 5:
             st.push( { lex::type::DEDENT, 0u } );
@@ -36,7 +37,7 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::INDENT, 0u } );
             st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::SYMBOL, lex::symbol::COLON } );
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::RULE, lex::rule::NEW_IDENTIFIER} );
             st.push( { lex::type::RESERVED, lex::reserved_word::CLASS } );
             break;
         case 6:
@@ -50,22 +51,18 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::RULE, lex::rule::CLASS_DECL } );
             break;
         case 9:
-            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
-            st.push( { lex::type::SYMBOL, lex::symbol::NOT } );
+            st.push( { lex::type::SYMBOL, lex::symbol::NOT_EQUAL } );
             break;
         case 10:
             st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
-            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
             break;
         case 11:
-            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
-            st.push( { lex::type::SYMBOL, lex::symbol::NOT } );
+            st.push( { lex::type::SYMBOL, lex::symbol::NOT_EQUAL } );
             break;
         case 12:
             st.push( { lex::type::SYMBOL, lex::symbol::LESS } );
             break;
         case 13:
-            st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
             st.push( { lex::type::SYMBOL, lex::symbol::EQUAL } );
             break;
         case 14:
@@ -94,7 +91,7 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
             st.push( { lex::type::RULE, lex::rule::PARAMS } );
             st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::RULE, lex::rule::NEW_IDENTIFIER } );
             break;
         case 20:
             st.push( { lex::type::RULE, lex::rule::ELSELINE } );
@@ -152,7 +149,7 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
             st.push( { lex::type::RULE, lex::rule::MPARAMS } );
             st.push( { lex::type::SYMBOL, lex::symbol::L_PARENTHESIS } );
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::RULE, lex::rule::NEW_IDENTIFIER} );
             st.push( { lex::type::RESERVED, lex::reserved_word::DEF } );
             break;
         case 31:
@@ -167,7 +164,7 @@ void push_rule( Stack& st, const int rule_number )
             break;
         case 34:
             st.push( { lex::type::RULE, lex::rule::MPARAM_LIST } );
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::RULE, lex::rule::NEW_IDENTIFIER} );
             break;
         case 35:
             st.push( { lex::type::RULE, lex::rule::MPARAMS } );
@@ -177,22 +174,22 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::EPS, 0u } );
             break;
         case 37:
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::IDENTIFIER, "" } );
             break;
         case 38:
             st.push( { lex::type::D_CONST, 0u } );
             break;
         case 39:
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::IDENTIFIER, ""} );
             break;
         case 40:
             st.push( { lex::type::B_CONST, false } );
             break;
         case 41:
-            st.push( { lex::type::RULE, lex::rule::IDENTIFIER} );
+            st.push( { lex::type::IDENTIFIER, ""} );
             break;
         case 42:
-            st.push( { lex::type::S_CONST, 0u } );
+            st.push( { lex::type::S_CONST, "" } );
             break;
         case 43:
             st.push( { lex::type::SYMBOL, lex::symbol::STAR } );
@@ -247,15 +244,24 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::RULE, lex::rule::SLINE } );
             break;
         case 59:
+            st.push( { lex::type::RULE, lex::rule::BREAKLINE });
+            break;
+        case 70:
             st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::RESERVED, lex::reserved_word::BREAK } );
             break;
         case 60:
+            st.push( { lex::type::RULE, lex::rule::RETURNLINE });
+            break;
+        case 71:
             st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
             st.push( { lex::type::RESERVED, lex::reserved_word::RETURN } );
             break;
         case 61:
+            st.push( { lex::type::RULE, lex::rule::PRINTLINE });
+            break;
+        case 72:
             st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::SYMBOL, lex::symbol::R_PARENTHESIS } );
             st.push( { lex::type::RULE, lex::rule::RIGHTSIDE } );
@@ -263,14 +269,13 @@ void push_rule( Stack& st, const int rule_number )
             st.push( { lex::type::RESERVED, lex::reserved_word::PRINT } );
             break;
         case 62:
-            st.push( { lex::type::NEWLINE, 0u } );
             st.push( { lex::type::RULE, lex::rule::ASSIGNMENT } );
             break;
         case 63:
             st.push( { lex::type::RULE, lex::rule::IFLINE } );
             break;
         case 64:
-            st.push( { lex::type::NEWLINE, 0u } );
+            st.push( { lex::type::NEWLINE, 0u });
             st.push( { lex::type::RULE, lex::rule::MCALL } );
             break;
         case 65:
@@ -297,6 +302,7 @@ void push_rule( Stack& st, const int rule_number )
             break;
         case 69:
             st.push( { lex::type::IDENTIFIER, "" } );
+            break;
 
         default:
             assert( !"NO SUCH RULE!" );
@@ -444,7 +450,6 @@ Table createTable()
 
     tmp.insert( { { { lex::type::IDENTIFIER, "" }, 1 }
                 , { { lex::type::IDENTIFIER, "" }, 2 }
-                // , { { lex::type::IDENTIFIER, "" }, 3 }
                 } );
     result.insert( { lex::rule::APPLICABLE, tmp } );
     tmp.clear();
@@ -466,12 +471,12 @@ Table createTable()
     result.insert( { lex::rule::CLASSES, tmp } );
     tmp.clear();
 
-    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT }, 9 }
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT_EQUAL }, 9 }
                 , { { lex::type::SYMBOL, lex::symbol::EQUAL }, 10 } } );
     result.insert( { lex::rule::COMPARATOR_EQ, tmp } );
     tmp.clear();
 
-    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT }, 11 }
+    tmp.insert( { { { lex::type::SYMBOL, lex::symbol::NOT_EQUAL }, 11 }
                 , { { lex::type::SYMBOL, lex::symbol::LESS }, 12 }
                 , { { lex::type::SYMBOL, lex::symbol::EQUAL }, 13 }
                 , { { lex::type::SYMBOL, lex::symbol::GREATER }, 14 }
@@ -669,7 +674,19 @@ Table createTable()
     tmp.clear();
 
     tmp.insert( { { lex::type::IDENTIFIER, "" }, 69 } );
-    result.insert( { lex::rule::IDENTIFIER, tmp } );
+    result.insert( { lex::rule::NEW_IDENTIFIER, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::RESERVED, lex::reserved_word::BREAK }, 70 } );
+    result.insert( { lex::rule::BREAKLINE, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::RESERVED, lex::reserved_word::RETURN }, 71 } );
+    result.insert( { lex::rule::RETURNLINE, tmp } );
+    tmp.clear();
+
+    tmp.insert( { { lex::type::RESERVED, lex::reserved_word::PRINT }, 72 } );
+    result.insert( { lex::rule::PRINTLINE, tmp } );
 
     return result;
 }

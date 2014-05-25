@@ -2,6 +2,14 @@
 
 #include <iostream>
 
+#ifdef NDEBUG
+    #define DEBUG(a)
+    #define DBG(a)
+#else
+    #include <iostream>
+    #define DEBUG(a) std::cout << #a << " = " << (a) << '\n'
+    #define DBG(a) std::cout << __LINE__ << " : " << a << '\n';
+#endif
 namespace sap
 {
 namespace
@@ -143,7 +151,16 @@ lex::rule getRule( const uint i_ruleNumber )
             return lex::rule::START;
         case 67:
             return lex::rule::WHILELINE;
+        case 69:
+            return lex::rule::NEW_IDENTIFIER;
+        case 70:
+            return lex::rule::BREAKLINE;
+        case 71:
+            return lex::rule::RETURNLINE;
+        case 72:
+            return lex::rule::PRINTLINE;
         default:
+            DEBUG(  i_ruleNumber );
             assert(!"NO SUCH RULE!");
     }
 
@@ -155,8 +172,9 @@ int getCount( const uint i_ruleNumber )
 {
     switch (i_ruleNumber) {
         case 1:
-        case 2:
             return 1;
+        case 2:
+            return 0;
         case 4:
         case 5:
             return 2;
@@ -206,7 +224,7 @@ int getCount( const uint i_ruleNumber )
         case 32:
             return 1;
         case 33:
-            return 2;
+        case 34:
             return 2;
         case 35:
             return 1;
@@ -215,7 +233,6 @@ int getCount( const uint i_ruleNumber )
         case 37:
         case 39:
         case 41:
-            return 1;
         case 38:
         case 40:
         case 42:
@@ -247,7 +264,6 @@ int getCount( const uint i_ruleNumber )
         case 58:
             return 2;
         case 59:
-            return -1;
         case 60:
         case 61:
         case 62:
@@ -261,7 +277,13 @@ int getCount( const uint i_ruleNumber )
             return 2;
         case 69:
             return 0;
+        case 70:
+            return -1;
+        case 71:
+        case 72:
+            return 1;
         default:
+            DEBUG( i_ruleNumber );
             assert(!"No such rule!");
     }
 
@@ -278,6 +300,7 @@ bool shouldSkip( const lex i_lhs ) {
                 case lex::symbol::L_PARENTHESIS:
                 case lex::symbol::R_PARENTHESIS:
                 case lex::symbol::COLON:
+                case lex::symbol::ASSIGN:
                     return true;
                 case lex::symbol::PLUS:
                 case lex::symbol::MINUS:
@@ -286,7 +309,7 @@ bool shouldSkip( const lex i_lhs ) {
                 case lex::symbol::EQUAL:
                 case lex::symbol::LESS:
                 case lex::symbol::GREATER:
-                case lex::symbol::NOT:
+                case lex::symbol::NOT_EQUAL:
                     return false;
                 default:
                     assert(!"No such symbol!");
@@ -334,23 +357,15 @@ node::node( Queue& i_queue, LIterator& i_it )
 
     const auto N = getCount( rule );
     if (0 > N) {
+        DBG( "It's EPSILON!" );
         value_ = lex{ lex::type::EPS, false };
     } else if (0 == N) {
         value_ = skip( i_it );
+        DBG( "It's LEAF!" );
 
-        switch( rule) {
-            case 9:
-            case 10:
-            case 11:
-            case 13:
-                // skip second EQUAL sign in comparation operator
-                assert( lex::symbol::EQUAL == boost::get< lex::symbol >( skip( i_it ).value_) );
-                break;
-            default:
-                break;
-                //noop
-        }
     } else {
+        DBG( "It's NOT Leaf!" );
+        DEBUG( N );
         auto nodes = node::nodes( );
         nodes.reserve( N );
 

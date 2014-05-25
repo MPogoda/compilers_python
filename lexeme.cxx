@@ -24,10 +24,11 @@ const char* const lex::symbol_STRINGS[] = { ","
                                           , "-"
                                           , "*"
                                           , "/"
+                                          , "=="
                                           , "="
                                           , "<"
                                           , ">"
-                                          , "!"
+                                          , "!="
                                           , ":"
                                           }; // symbol_STRINGS
 const char* const lex::reserved_STRINGS[] = { "def"
@@ -74,8 +75,10 @@ const char* const lex::rule_STRINGS[] = { "{applicable}"
                                         , "{sline}"
                                         , "{start}"
                                         , "{whileline}"
-                                        , "{identifier}"
-
+                                        , "{new_identifier}"
+                                        , "{breakline}"
+                                        , "{returnline}"
+                                        , "{printline}"
                                         }; // rule_STRINGS
 
 std::ostream& operator<<( std::ostream& out, lex::type rhs )
