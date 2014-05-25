@@ -35,15 +35,107 @@
 //              method_used_names += parameter_name
 //
 //          Go to the last child: SLINES
-//          Iteratate over all its children:
+//          construct SLINES( node, method_used_names , -1 ) and save it  to statements
+//
+//  Slines:
+//      has lines
+//      has block_names
+//      has nesting
+//      Constructor( node, used_names, nesting ):
+//          ASSERT type of node
+//          block_names = used_names
+//          nesting = nesting
+//          Iteratate over all its children: (except last (EPS))
 //              switch rule:
-//                  break: REPORT ERROR
+//                  break: REPORT ERROR if nesting == -1
 //                  return: create RETURN( node, method_used_names (const)), expect no more rules
 //                  print: create PRINT( node, method_used_names (const))
 //                  assignment: create ASSIGNMENT( node, method_used_names (non-const))
-//                  ifline: create IF_STMT( node, method_used_names (const))
-//                  whileline: create while_stmt( node, method_used_names (const))
-//                  mcall: create METHOD_CALL( node, method_used_names
+//                  ifline: create IF_STMT( node, method_used_names (const), nesting = nesting)
+//                  whileline: create while_stmt( node, method_used_names(const), nesting = nesting)
+//                  mcall: create METHOD_CALL( node, method_used_names (const))
+//              whatever is created, append to lines
+//
+//  If_stmt: (same for while, except (nesting=nesting+1))
+//      has logic
+//      has then_block
+//      has else_block
+//      Constructor( node, method_used_names, nesting ):
+//          ASSERT node type is IFLINE
+//          Construct LOGIC from first children
+//
+//          Goto second child (THENPART)
+//          construct SLINES( node, method_used_names , nesting ) and save it to then_block
+//
+//          Goto thirt chils (ELSEPART)
+//          If its child is EPS, NOP
+//          construct SLINES( node, method_used_names , nesting ) and save it to else_part
+//
+//  Operand_*:
+//      has name or value
+//      Constructor( node, used_names ):
+//          ASSERT node type
+//          Get LEAF
+//          if its type is const, store  it
+//          else, look up for identifier
+//          If such name not exists or its type is not variable, ABORT
+//          Else store iterator to it.
+//
+//  EXPR: LOGIC_*
+//      has lhs
+//      has op or NOP
+//      has rhs
+//      Constructor( node, used_names ):
+//          NODE TYPE ASSERTION
+//          Get children count
+//          if it is 3
+//              get lhs
+//              get op
+//              get rhs
+//          else
+//              get lhs
+//              set op = NOP
+//
+//  FCALL:
+//      has classname
+//      has params
+//      CONSTRUCTOR( node, used_names ):
+//          assert node type
+//          get classname
+//          check whether it presents and is CLASSNAME
+//
+//  APPLICABLE:
+//      has identifier
+//      has classname
+//
+//      Constructor( node, used_names):
+//          assert node type
+//          get first child
+//          if type == FCALL:
+//              store it as classname
+//          else:
+//              type should be equal to IDENTIFIER
+//              check that this identifier is VARIABLE
+//              store it as identifier
+//              get identifier type
+//              store it as classname
+//
+//  MCALL:
+//      has applicable
+//      has methodname
+//      has parameters
+//      Ctor( node, used_names ):
+//          assert node type
+//          get applicable( child[0], used_names )
+//          get methodname from child[ 1 ]
+//          assert applicable.classname has methodname
+//
+//          get number of parameters from class
+//  RIGHTSIDE: combine all previous typer
+//
+//
+//
+//
 //
 
 #include <vector>
@@ -63,352 +155,6 @@
 #endif
 namespace sap
 {
-struct node
-{
-    lex::rule rule_;
-    using nodes = std::vector< node >;
-    using value = boost::variant< lex, nodes >;
-    value value_;
-};
-
-struct node_printer
-{
-    uint level = 0;
-    void printLevel() const {
-        for (uint i = 0; level != i; ++i) {
-            std::cout << "> ";
-        }
-    }
-    void print( const node root ) {
-        printLevel();
-        std::cout << root.rule_;
-        if (const lex* lhs = boost::get< lex >( &root.value_ )) {
-            std::cout << " == " << *lhs << '\n';
-        } else {
-            const node::nodes* nodes = boost::get< node::nodes >( &root.value_);
-            ++level;
-            std::cout <<'\n';
-            for (const auto& nd : *nodes ) {
-                print( nd );
-            }
-            --level;
-        }
-    }
-};
-
-lex::rule getRule( const uint rule_number ) {
-    switch (rule_number) {
-        case 1:
-        case 2:
-            return lex::rule::APPLICABLE;
-        case 4:
-            return lex::rule::ASSIGNMENT;
-        case 5:
-            return lex::rule::CLASS_DECL;
-        case 6:
-        case 7:
-            return lex::rule::CLASS_LIST;
-        case 8:
-            return lex::rule::CLASSES;
-        case 9:
-        case 10:
-            return lex::rule::COMPARATOR_EQ;
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-            return lex::rule::COMPARATOR_INT;
-        case 15:
-        case 16:
-            return lex::rule::ELSELINE;
-        case 17:
-        case 18:
-            return lex::rule::EXPR_INT;
-        case 19:
-            return lex::rule::FCALL;
-        case 20:
-            return lex::rule::IFLINE;
-        case 21:
-            return lex::rule::INPUT;
-        case 22:
-        case 23:
-            return lex::rule::LOGIC_BOOL;
-        case 24:
-            return lex::rule::LOGIC_INT;
-        case 25:
-            return lex::rule::LOGIC_STR;
-        case 26:
-        case 27:
-        case 28:
-            return lex::rule::LOGIC;
-        case 29:
-            return lex::rule::MCALL;
-        case 30:
-            return lex::rule::METHOD_DECL;
-        case 31:
-        case 32:
-            return lex::rule::METHOD_LIST;
-        case 33:
-            return lex::rule::METHODS;
-        case 34:
-            return lex::rule::MPARAMS;
-        case 35:
-        case 36:
-            return lex::rule::MPARAM_LIST;
-        case 37:
-        case 38:
-            return lex::rule::OPERAND_INT;
-        case 39:
-        case 40:
-            return lex::rule::OPERAND_BOOL;
-        case 41:
-        case 42:
-            return lex::rule::OPERAND_STR;
-        case 43:
-        case 44:
-        case 45:
-        case 46:
-            return lex::rule::OPERATOR_INT;
-        case 47:
-        case 48:
-            return lex::rule::PARAM_LIST;
-        case 49:
-        case 50:
-            return lex::rule::PARAMS;
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 68:
-            return lex::rule::RIGHTSIDE;
-        case 56:
-        case 57:
-            return lex::rule::SLINE_LIST;
-        case 58:
-            return lex::rule::SLINES;
-        case 59:
-        case 60:
-        case 61:
-        case 62:
-        case 63:
-        case 64:
-        case 65:
-            return lex::rule::SLINE;
-        case 66:
-            return lex::rule::START;
-        case 67:
-            return lex::rule::WHILELINE;
-        default:
-            assert(!"FAIL!");
-    }
-
-    return lex::rule::COUNT;
-}
-
-int getCount( const uint rule_number ) {
-    switch (rule_number) {
-        case 1:
-            return 1;
-        case 2:
-            return 1;
-        case 4:
-            return 2;
-        case 5:
-            return 2;
-        case 6:
-            return 1;
-        case 7:
-            return -1;
-        case 8:
-            return 2;
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-            return 0;
-        case 15:
-            return 1;
-        case 16:
-            return -1;
-        case 17:
-            return 1;
-        case 18:
-            return 3;
-        case 19:
-            return 2;
-        case 20:
-            return 3;
-        case 21:
-            return -1;
-        case 22:
-            return 1;
-        case 23:
-        case 24:
-        case 25:
-            return 3;
-        case 26:
-        case 27:
-        case 28:
-            return 1;
-        case 29:
-            return 2;
-        case 30:
-            return 3;
-        case 31:
-            return -1;
-        case 32:
-            return 1;
-        case 33:
-            return 2;
-        case 34:
-            return 2;
-        case 35:
-            return 1;
-        case 36:
-            return -1;
-        case 37:
-        case 39:
-        case 41:
-            return 1;
-        case 38:
-        case 40:
-        case 42:
-        case 43:
-        case 44:
-        case 45:
-        case 46:
-            return 0;
-        case 47:
-            return 2;
-        case 48:
-            return -1;
-        case 49:
-            return 2;
-        case 50:
-            return -1;
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 68:
-            return 1;
-        case 55:
-            return 0;
-        case 56:
-            return -1;
-        case 57:
-            return 1;
-        case 58:
-            return 2;
-        case 59:
-            return -1;
-        case 60:
-        case 61:
-        case 62:
-        case 63:
-        case 64:
-        case 65:
-            return 1;
-        case 66:
-            return 2;
-        case 67:
-            return 2;
-        case 69:
-            return 0;
-        default:
-            assert(!"FAIL!");
-    }
-
-    return 0;
-}
-
-bool shouldSkip( const lex lhs ) {
-    switch (lhs.type_) {
-        case lex::type::SYMBOL:
-            switch (boost::get< lex::symbol >( lhs.value_ )) {
-                case lex::symbol::COMMA:
-                case lex::symbol::DOT:
-                case lex::symbol::L_PARENTHESIS:
-                case lex::symbol::R_PARENTHESIS:
-                case lex::symbol::COLON:
-                    return true;
-                case lex::symbol::PLUS:
-                case lex::symbol::MINUS:
-                case lex::symbol::STAR:
-                case lex::symbol::SLASH:
-                case lex::symbol::EQUAL:
-                case lex::symbol::LESS:
-                case lex::symbol::GREATER:
-                case lex::symbol::NOT:
-                    return false;
-                default:
-                    assert(!"FAIL!");
-            }
-        case lex::type::D_CONST:
-        case lex::type::B_CONST:
-        case lex::type::S_CONST:
-        case lex::type::IDENTIFIER:
-            return false;
-        case lex::type::INDENT:
-        case lex::type::DEDENT:
-        case lex::type::NEWLINE:
-        case lex::type::RESERVED:
-            return true;
-        default:
-            assert(!"FAIL!");
-    }
-    assert(!"FAIL!");
-    return false;
-}
-
-lex skip( LIterator& it ) {
-    while (shouldSkip( *it )) ++it;
-
-    return *it++;
-}
-
-node createTree( Queue& queue, LIterator& it)
-{
-    assert(!queue.empty());
-    const auto rule = queue.front();
-    queue.pop();
-
-    node root;
-    root.rule_ = getRule( rule );
-
-    const auto N = getCount( rule );
-    if (0 > N) {
-        root.value_ = lex{ lex::type::EPS, false };
-    } else if (0 == N) {
-        root.value_ = skip( it );
-
-        switch( rule) {
-            case 9:
-            case 10:
-            case 11:
-            case 13:
-                assert( lex::symbol::EQUAL == boost::get< lex::symbol >( skip( it ).value_) );
-                break;
-            default:
-                break;
-                //noop
-        }
-    } else {
-        auto nodes = node::nodes( N );
-
-        for (int i = 0; N != i; ++i) {
-            nodes[ i ] = createTree( queue, it );
-        }
-
-        root.value_ = nodes;
-    }
-
-    return root;
-}
-
 enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 
 using identifier_table = std::unordered_map< std::string, variable_name >;
