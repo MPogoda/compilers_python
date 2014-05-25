@@ -21,7 +21,7 @@ public:
             for (const auto& nd : *nodes ) {
                 print( nd );
             }
-            --level;
+            --level_;
         }
     }
 
@@ -324,6 +324,7 @@ lex skip( LIterator& i_it ) {
 
     return *i_it++;
 }
+} // namespace
 
 node createTree( Queue& i_queue, LIterator& i_it )
 {
@@ -366,5 +367,4 @@ node createTree( Queue& i_queue, LIterator& i_it )
     return root;
 }
 
-} // namespace
 } // namespace sap
