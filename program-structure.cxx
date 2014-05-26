@@ -381,6 +381,28 @@ struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
         }
     }
 };
+
+using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
+Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
+{
+    ProgramElement< lex::rule::LOGIC > assertion{ i_node };
+
+    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+    assert( 1 == nodes.size() );
+
+    const auto& child = nodes[ 0 ];
+    switch (child.rule_) {
+        case lex::rule::LOGIC_INT:
+            return LogicDouble{ child, i_symbolTable };
+        case lex::rule::LOGIC_BOOL:
+            return LogicBool{ child, i_symbolTable };
+        case lex::rule::LOGIC_STR:
+            return LogicString{ child, i_symbolTable };
+        default:
+            DEBUG( child.rule_ );
+            assert( !"Wrong child node!" );
+    }
+}
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
