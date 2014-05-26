@@ -1,5 +1,3 @@
-#include <boost/variant.hpp>
-
 //  Class:
 //      has name
 //      has class_used_names
@@ -153,20 +151,24 @@
 
 #include <string>
 #include <algorithm>
+
+#include <boost/optional.hpp>
+#include <boost/variant.hpp>
+
 namespace sap
 {
-class symbol_table
+class SymbolTable
 {
 public:
-    using identifiers = std::vector< std::string >;
-    using identifier  = identifiers::const_iterator;
+    using Identifiers = std::vector< std::string >;
+    using Identifier  = Identifiers::const_iterator;
 
-    identifiers variables;
+    Identifiers variables_;
 
-    identifier getVariable( const std::string& i_name ) const // can throw
+    Identifier getVariable( const std::string& i_name ) const // can throw
     {
-        const identifier result = std::find( variables.cbegin(), variables.cend(), i_name );
-        if (variables.end() == result) {
+        const Identifier result = std::find( variables_.begin(), variables_.end(), i_name );
+        if (variables_.end() == result) {
             throw std::logic_error{ "No such variable!" };
         }
 
@@ -174,14 +176,23 @@ public:
     }
 };
 
-struct operand_double
+template < lex::rule Rule >
+struct ProgramElement
 {
-    using value = boost::variant< symbol_table::identifier, double >;
-    value value_;
-
-    operand_double( node i_node, const symbol_table& i_symbolTable )
+    ProgramElement( node i_node )
     {
-        assert( i_node.rule_ == lex::rule::OPERAND_INT );
+        assert( Rule == i_node.rule_ );
+    }
+};
+
+struct OperandDouble : ProgramElement< lex::rule::OPERAND_INT >
+{
+    using Value = boost::variant< SymbolTable::Identifier, double >;
+    Value value_;
+
+    OperandDouble( node i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
+    {
         const lex value = boost::get< lex >( i_node.value_);
         if (value.type_ == lex::type::D_CONST) {
             value_ = boost::get< double >( value.value_ );
@@ -194,14 +205,15 @@ struct operand_double
         }
     }
 };
-struct operand_bool
-{
-    using value = boost::variant< symbol_table::identifier, bool >;
-    value value_;
 
-    operand_bool( node i_node, const symbol_table& i_symbolTable )
+struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
+{
+    using Value = boost::variant< SymbolTable::Identifier, bool >;
+    Value value_;
+
+    OperandBool( node i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
     {
-        assert( i_node.rule_ == lex::rule::OPERAND_BOOL );
         const lex value = boost::get< lex >( i_node.value_);
         if (value.type_ == lex::type::B_CONST) {
             value_ = boost::get< bool >( value.value_ );
@@ -214,14 +226,15 @@ struct operand_bool
         }
     }
 };
-struct operand_string
-{
-    using value = boost::variant< symbol_table::identifier, std::string >;
-    value value_;
 
-    operand_string( node i_node, const symbol_table& i_symbolTable )
+struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
+{
+    using Value = boost::variant< SymbolTable::Identifier, std::string >;
+    Value value_;
+
+    OperandString( node i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
     {
-        assert( i_node.rule_ == lex::rule::OPERAND_STR );
         const lex value = boost::get< lex >( i_node.value_);
         if (value.type_ == lex::type::S_CONST) {
             value_ = boost::get< std::string >( value.value_ );
@@ -231,6 +244,49 @@ struct operand_string
             value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
 
             // TODO: check type of variable
+        }
+    }
+};
+
+struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
+{
+    OperandDouble  lhs_;
+    enum class Op { PLUS, MINUS, MULT, DIV };
+    boost::optional< Op > op_;
+    boost::optional< OperandDouble >  rhs_;
+
+    ExprDouble( node i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
+        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+    {
+        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+
+        if (nodes.size() == 3) {
+            const auto& op_node = nodes[ 1 ];
+            assert( lex::rule::OPERATOR_INT == op_node.rule_ );
+            const lex op_lexeme = boost::get< lex >( op_node.value_ );
+            assert( lex::type::SYMBOL == op_lexeme.type_ );
+            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+                case lex::symbol::PLUS:
+                    op_ = Op::PLUS;
+                    break;
+                case lex::symbol::MINUS:
+                    op_ = Op::MINUS;
+                    break;
+                case lex::symbol::STAR:
+                    op_ = Op::MULT;
+                    break;
+                case lex::symbol::SLASH:
+                    op_ = Op::DIV;
+                    break;
+                default:
+                    DEBUG( op_lexeme);
+                    assert( !"Fail!" );
+            }
+
+            rhs_ = OperandDouble{  nodes[ 2 ], i_symbolTable };
+        } else if (nodes.size() != 1) {
+            throw std::logic_error{ "Wrong number of lexemes in expression!" };
         }
     }
 };
