@@ -140,141 +140,221 @@
 
 #include <vector>
 
-#include "parse.h"
-#include "lexeme.h"
-#include "syntax.h"
+#include "program_tree.h"
 
-    #include <iostream>
 #ifdef NDEBUG
     #define DEBUG(a)
     #define DBG(a)
 #else
     #include <iostream>
-    #define DEBUG_MSG(a) std::cout << #a << " = " << (a) << '\n'
+    #define DEBUG(a) std::cout << #a << " = " << (a) << '\n'
     #define DBG(a) std::cout << __LINE__ << " : " << a << '\n';
 #endif
+
+#include <string>
+#include <algorithm>
 namespace sap
 {
-enum class variable_name : uint8_t { CLASS , METHOD , VAR};
-
-using identifier_table = std::unordered_map< std::string, variable_name >;
-
-
-using identifiers = std::vector< std::string >;
-using identifier  = identifiers::const_iterator;
-using double_constants = std::vector< double >;
-using double_constant  = double_constants::const_iterator;
-using bool_constants   = std::vector< bool >;
-using bool_constant    = bool_constants::const_iterator;
-using string_constants = std::vector< std::string >;
-using string_constant  = string_constants::const_iterator;
-
-using operand_double = boost::variant< identifier, double_constant >;
-using operand_bool   = boost::variant< identifier, bool_constant >;
-using operand_string = boost::variant< identifier, string_constant >;
-
-enum class operator_double : uint8_t { NONE, PLUS, MINUS, MULT, DIV };
-struct expr_int
+class symbol_table
 {
-    // expr_int( LIterator it, const identifiers inherited ) {
-    //     if (
-    // }
-    operand_double lhs;
-    operator_double  op;
-    operand_double rhs;
+public:
+    using identifiers = std::vector< std::string >;
+    using identifier  = identifiers::const_iterator;
+
+    identifiers variables;
+
+    identifier getVariable( const std::string& i_name ) const // can throw
+    {
+        const identifier result = std::find( variables.cbegin(), variables.cend(), i_name );
+        if (variables.end() == result) {
+            throw std::logic_error{ "No such variable!" };
+        }
+
+        return result;
+    }
 };
 
-enum class comparator_eq : uint8_t { EQ, NE };
-enum class comparator_double : uint8_t { EQ, NE, LE, GE };
-
-struct logic_double
+struct operand_double
 {
-    operand_double lhs;
-    comparator_double cmp;
-    operand_double rhs;
-};
+    using value = boost::variant< symbol_table::identifier, double >;
+    value value_;
 
-struct logic_bool_b
+    operand_double( node i_node, const symbol_table& i_symbolTable )
+    {
+        assert( i_node.rule_ == lex::rule::OPERAND_INT );
+        const lex value = boost::get< lex >( i_node.value_);
+        if (value.type_ == lex::type::D_CONST) {
+            value_ = boost::get< double >( value.value_ );
+        } else {
+            assert( value.type_ == lex::type::IDENTIFIER );
+
+            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+            // TODO: check type of variable
+        }
+    }
+};
+struct operand_bool
 {
-    operand_bool lhs;
-    comparator_eq cmp;
-    operand_bool rhs;
-};
-using logic_bool = boost::variant< operand_bool, logic_bool_b >;
+    using value = boost::variant< symbol_table::identifier, bool >;
+    value value_;
 
-struct logic_string
+    operand_bool( node i_node, const symbol_table& i_symbolTable )
+    {
+        assert( i_node.rule_ == lex::rule::OPERAND_BOOL );
+        const lex value = boost::get< lex >( i_node.value_);
+        if (value.type_ == lex::type::B_CONST) {
+            value_ = boost::get< bool >( value.value_ );
+        } else {
+            assert( value.type_ == lex::type::IDENTIFIER );
+
+            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+            // TODO: check type of variable
+        }
+    }
+};
+struct operand_string
 {
-    operand_string lhs;
-    comparator_eq cmp;
-    operand_string rhs;
+    using value = boost::variant< symbol_table::identifier, std::string >;
+    value value_;
+
+    operand_string( node i_node, const symbol_table& i_symbolTable )
+    {
+        assert( i_node.rule_ == lex::rule::OPERAND_STR );
+        const lex value = boost::get< lex >( i_node.value_);
+        if (value.type_ == lex::type::S_CONST) {
+            value_ = boost::get< std::string >( value.value_ );
+        } else {
+            assert( value.type_ == lex::type::IDENTIFIER );
+
+            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+            // TODO: check type of variable
+        }
+    }
 };
 
-using logic = boost::variant< logic_double, logic_bool, logic_string >;
-
-using constructor = identifier;
-
-using applicable = identifier;
-
-struct method_call {
-    applicable lhs;
-    identifier rhs;
-    // params
-};
-
-enum class reserved : uint8_t { READ, WRITE, BREAK };
-
-using rightside = boost::variant< logic, expr_int, reserved, constructor, method_call, string_constant >;
-
-struct assignment
-{
-    identifier lhs;
-    rightside rhs;
-};
-
-struct returnline { rightside what; };
-
-struct ifline;
-struct whileline;
-using sline = boost::variant< assignment, reserved, returnline, ifline, whileline, method_call>;
-
-struct slines {
-    std::vector< sline > lines;
-    identifiers locals;
-    const identifiers inherited;
-
-    slines( const identifiers i_inherited ) : inherited{ i_inherited } {}
-
-};
-
-
-struct ifline {
-    logic lhs;
-    slines thenpart;
-    slines elsepart;
-};
-
-struct whileline {
-    logic condition;
-    slines body;
-};
-
-struct method {
-    identifier name;
-    identifiers params;
-    identifiers ids;
-    slines body;
-};
-
-struct classdecl {
-    identifier name;
-    identifiers methods;
-    std::vector< method > method_definitions;
-};
-
-struct program {
-    identifiers classes;
-    std::vector< classdecl > class_decls;
-    method_call main;
-};
-
+// enum class variable_name : uint8_t { CLASS , METHOD , VAR};
+//
+// using identifier_table = std::unordered_map< std::string, variable_name >;
+//
+//
+// using identifiers = std::vector< std::string >;
+// using identifier  = identifiers::const_iterator;
+// using double_constants = std::vector< double >;
+// using double_constant  = double_constants::const_iterator;
+// using bool_constants   = std::vector< bool >;
+// using bool_constant    = bool_constants::const_iterator;
+// using string_constants = std::vector< std::string >;
+// using string_constant  = string_constants::const_iterator;
+//
+// using operand_double = boost::variant< identifier, double_constant >;
+// using operand_bool   = boost::variant< identifier, bool_constant >;
+// using operand_string = boost::variant< identifier, string_constant >;
+//
+// enum class operator_double : uint8_t { NONE, PLUS, MINUS, MULT, DIV };
+// struct expr_int
+// {
+//     // expr_int( LIterator it, const identifiers inherited ) {
+//     //     if (
+//     // }
+//     operand_double lhs;
+//     operator_double  op;
+//     operand_double rhs;
+// };
+//
+// enum class comparator_eq : uint8_t { EQ, NE };
+// enum class comparator_double : uint8_t { EQ, NE, LE, GE };
+//
+// struct logic_double
+// {
+//     operand_double lhs;
+//     comparator_double cmp;
+//     operand_double rhs;
+// };
+//
+// struct logic_bool_b
+// {
+//     operand_bool lhs;
+//     comparator_eq cmp;
+//     operand_bool rhs;
+// };
+// using logic_bool = boost::variant< operand_bool, logic_bool_b >;
+//
+// struct logic_string
+// {
+//     operand_string lhs;
+//     comparator_eq cmp;
+//     operand_string rhs;
+// };
+//
+// using logic = boost::variant< logic_double, logic_bool, logic_string >;
+//
+// using constructor = identifier;
+//
+// using applicable = identifier;
+//
+// struct method_call {
+//     applicable lhs;
+//     identifier rhs;
+//     // params
+// };
+//
+// enum class reserved : uint8_t { READ, WRITE, BREAK };
+//
+// using rightside = boost::variant< logic, expr_int, reserved, constructor, method_call, string_constant >;
+//
+// struct assignment
+// {
+//     identifier lhs;
+//     rightside rhs;
+// };
+//
+// struct returnline { rightside what; };
+//
+// struct ifline;
+// struct whileline;
+// using sline = boost::variant< assignment, reserved, returnline, ifline, whileline, method_call>;
+//
+// struct slines {
+//     std::vector< sline > lines;
+//     identifiers locals;
+//     const identifiers inherited;
+//
+//     slines( const identifiers i_inherited ) : inherited{ i_inherited } {}
+//
+// };
+//
+//
+// struct ifline {
+//     logic lhs;
+//     slines thenpart;
+//     slines elsepart;
+// };
+//
+// struct whileline {
+//     logic condition;
+//     slines body;
+// };
+//
+// struct method {
+//     identifier name;
+//     identifiers params;
+//     identifiers ids;
+//     slines body;
+// };
+//
+// struct classdecl {
+//     identifier name;
+//     identifiers methods;
+//     std::vector< method > method_definitions;
+// };
+//
+// struct program {
+//     identifiers classes;
+//     std::vector< classdecl > class_decls;
+//     method_call main;
+// };
+//
 } // namespace sap
