@@ -179,7 +179,7 @@ public:
 template < lex::rule Rule >
 struct ProgramElement
 {
-    ProgramElement( node i_node )
+    ProgramElement( const node& i_node )
     {
         assert( Rule == i_node.rule_ );
     }
@@ -190,7 +190,7 @@ struct OperandDouble : ProgramElement< lex::rule::OPERAND_INT >
     using Value = boost::variant< SymbolTable::Identifier, double >;
     Value value_;
 
-    OperandDouble( node i_node, const SymbolTable& i_symbolTable )
+    OperandDouble( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
     {
         const lex value = boost::get< lex >( i_node.value_);
@@ -211,7 +211,7 @@ struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
     using Value = boost::variant< SymbolTable::Identifier, bool >;
     Value value_;
 
-    OperandBool( node i_node, const SymbolTable& i_symbolTable )
+    OperandBool( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
     {
         const lex value = boost::get< lex >( i_node.value_);
@@ -232,7 +232,7 @@ struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
     using Value = boost::variant< SymbolTable::Identifier, std::string >;
     Value value_;
 
-    OperandString( node i_node, const SymbolTable& i_symbolTable )
+    OperandString( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
     {
         const lex value = boost::get< lex >( i_node.value_);
@@ -255,7 +255,7 @@ struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
     boost::optional< Op > op_;
     boost::optional< OperandDouble >  rhs_;
 
-    ExprDouble( node i_node, const SymbolTable& i_symbolTable )
+    ExprDouble( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
         , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
     {
@@ -291,6 +291,122 @@ struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
     }
 };
 
+struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
+{
+    OperandBool  lhs_;
+    enum class Cmp { EQ, NE };
+    boost::optional< Cmp > cmp_;
+    boost::optional< OperandBool >  rhs_;
+
+    LogicBool( const node& i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
+        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+    {
+        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+
+        if (nodes.size() == 3) {
+            const auto& op_node = nodes[ 1 ];
+            assert( lex::rule::COMPARATOR_EQ == op_node.rule_ );
+            const lex op_lexeme = boost::get< lex >( op_node.value_ );
+            assert( lex::type::SYMBOL == op_lexeme.type_ );
+            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+                case lex::symbol::EQUAL:
+                    cmp_ = Cmp::EQ;
+                    break;
+                case lex::symbol::NOT_EQUAL:
+                    cmp_ = Cmp::NE;
+                    break;
+                default:
+                    DEBUG( op_lexeme);
+                    assert( !"Fail!" );
+            }
+
+            rhs_ = OperandBool{  nodes[ 2 ], i_symbolTable };
+        } else if (nodes.size() != 1) {
+            throw std::logic_error{ "Wrong number of lexemes in expression!" };
+        }
+    }
+};
+
+struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
+{
+    OperandDouble  lhs_;
+    enum class Cmp { L, G, EQ, NE };
+    Cmp cmp_;
+    OperandDouble rhs_;
+
+    LogicDouble( const node& i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
+        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+        , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
+    {
+        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+
+        if (nodes.size() == 3) {
+            const auto& op_node = nodes[ 1 ];
+            assert( lex::rule::COMPARATOR_INT == op_node.rule_ );
+            const lex op_lexeme = boost::get< lex >( op_node.value_ );
+            assert( lex::type::SYMBOL == op_lexeme.type_ );
+            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+                case lex::symbol::EQUAL:
+                    cmp_ = Cmp::EQ;
+                    break;
+                case lex::symbol::NOT_EQUAL:
+                    cmp_ = Cmp::NE;
+                    break;
+                case lex::symbol::LESS:
+                    cmp_ = Cmp::L;
+                    break;
+                case lex::symbol::GREATER:
+                    cmp_ = Cmp::G;
+                    break;
+                default:
+                    DEBUG( op_lexeme);
+                    assert( !"Fail!" );
+            }
+
+            rhs_ = OperandDouble{  nodes[ 2 ], i_symbolTable };
+        } else {
+            throw std::logic_error{ "Wrong number of lexemes in expression!" };
+        }
+    }
+};
+
+struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
+{
+    OperandString  lhs_;
+    enum class Cmp { EQ, NE };
+    Cmp cmp_;
+    OperandString rhs_;
+
+    LogicString( const node& i_node, const SymbolTable& i_symbolTable )
+        : ProgramElement( i_node )
+        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+        , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
+    {
+        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+
+        if (nodes.size() == 3) {
+            const auto& op_node = nodes[ 1 ];
+            assert( lex::rule::COMPARATOR_EQ == op_node.rule_ );
+            const lex op_lexeme = boost::get< lex >( op_node.value_ );
+            assert( lex::type::SYMBOL == op_lexeme.type_ );
+            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+                case lex::symbol::EQUAL:
+                    cmp_ = Cmp::EQ;
+                    break;
+                case lex::symbol::NOT_EQUAL:
+                    cmp_ = Cmp::NE;
+                    break;
+                default:
+                    DEBUG( op_lexeme);
+                    assert( !"Fail!" );
+            }
+        } else {
+            throw std::logic_error{ "Wrong number of lexemes in expression!" };
+        }
+    }
+};
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
