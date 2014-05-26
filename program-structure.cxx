@@ -291,10 +291,42 @@ struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
     }
 };
 
+enum class Cmp { EQ, NE, LE, GE };
+Cmp pareCmp( const node& i_node )
+{
+    assert( (lex::rule::COMPARATOR_EQ == i_node.rule_) || (lex::rule::COMPARATOR_INT == i_node.rule_ ));
+
+    const bool HAS_ORDER = lex::rule::COMPARATOR_INT == i_node.rule_;
+
+    const lex op_lexeme = boost::get< lex >( i_node.value_ );
+    assert( lex::type::SYMBOL == op_lexeme.type_ );
+
+    switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+        case lex::symbol::LESS:
+            assert( HAS_ORDER );
+            return Cmp::LE;
+            break;
+        case lex::symbol::GREATER:
+            assert( HAS_ORDER );
+            return Cmp::GE;
+            break;
+        case lex::symbol::EQUAL:
+            return Cmp::EQ;
+            break;
+        case lex::symbol::NOT_EQUAL:
+            return Cmp::NE;
+            break;
+        default:
+            DEBUG( op_lexeme);
+            assert( !"Fail!" );
+    }
+
+    // return Cmp::EQ;
+}
+
 struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
 {
     OperandBool  lhs_;
-    enum class Cmp { EQ, NE };
     boost::optional< Cmp > cmp_;
     boost::optional< OperandBool >  rhs_;
 
@@ -305,21 +337,7 @@ struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
         const auto& nodes = boost::get< node::nodes >( i_node.value_ );
 
         if (nodes.size() == 3) {
-            const auto& op_node = nodes[ 1 ];
-            assert( lex::rule::COMPARATOR_EQ == op_node.rule_ );
-            const lex op_lexeme = boost::get< lex >( op_node.value_ );
-            assert( lex::type::SYMBOL == op_lexeme.type_ );
-            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
-                case lex::symbol::EQUAL:
-                    cmp_ = Cmp::EQ;
-                    break;
-                case lex::symbol::NOT_EQUAL:
-                    cmp_ = Cmp::NE;
-                    break;
-                default:
-                    DEBUG( op_lexeme);
-                    assert( !"Fail!" );
-            }
+            cmp_ = pareCmp( nodes[ 1 ] );
 
             rhs_ = OperandBool{  nodes[ 2 ], i_symbolTable };
         } else if (nodes.size() != 1) {
@@ -331,42 +349,16 @@ struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
 struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
 {
     OperandDouble  lhs_;
-    enum class Cmp { L, G, EQ, NE };
     Cmp cmp_;
     OperandDouble rhs_;
 
     LogicDouble( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
         , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+        , cmp_{ pareCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
         , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
     {
-        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
-
-        if (nodes.size() == 3) {
-            const auto& op_node = nodes[ 1 ];
-            assert( lex::rule::COMPARATOR_INT == op_node.rule_ );
-            const lex op_lexeme = boost::get< lex >( op_node.value_ );
-            assert( lex::type::SYMBOL == op_lexeme.type_ );
-            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
-                case lex::symbol::EQUAL:
-                    cmp_ = Cmp::EQ;
-                    break;
-                case lex::symbol::NOT_EQUAL:
-                    cmp_ = Cmp::NE;
-                    break;
-                case lex::symbol::LESS:
-                    cmp_ = Cmp::L;
-                    break;
-                case lex::symbol::GREATER:
-                    cmp_ = Cmp::G;
-                    break;
-                default:
-                    DEBUG( op_lexeme);
-                    assert( !"Fail!" );
-            }
-
-            rhs_ = OperandDouble{  nodes[ 2 ], i_symbolTable };
-        } else {
+        if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
             throw std::logic_error{ "Wrong number of lexemes in expression!" };
         }
     }
@@ -375,34 +367,16 @@ struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
 struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
 {
     OperandString  lhs_;
-    enum class Cmp { EQ, NE };
     Cmp cmp_;
     OperandString rhs_;
 
     LogicString( const node& i_node, const SymbolTable& i_symbolTable )
         : ProgramElement( i_node )
         , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+        , cmp_{ pareCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
         , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
     {
-        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
-
-        if (nodes.size() == 3) {
-            const auto& op_node = nodes[ 1 ];
-            assert( lex::rule::COMPARATOR_EQ == op_node.rule_ );
-            const lex op_lexeme = boost::get< lex >( op_node.value_ );
-            assert( lex::type::SYMBOL == op_lexeme.type_ );
-            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
-                case lex::symbol::EQUAL:
-                    cmp_ = Cmp::EQ;
-                    break;
-                case lex::symbol::NOT_EQUAL:
-                    cmp_ = Cmp::NE;
-                    break;
-                default:
-                    DEBUG( op_lexeme);
-                    assert( !"Fail!" );
-            }
-        } else {
+        if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
             throw std::logic_error{ "Wrong number of lexemes in expression!" };
         }
     }
