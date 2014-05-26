@@ -403,6 +403,27 @@ Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
             assert( !"Wrong child node!" );
     }
 }
+
+using Rightside = boost::variant< Logic, ExprDouble >; // TODO: add more
+Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
+{
+    ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
+
+    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+    assert( 1 == nodes.size() );
+
+    const auto& child = nodes[ 0 ];
+    switch (child.rule_) {
+        case lex::rule::LOGIC:
+            return parseLogic( child, i_symbolTable );
+        case lex::rule::EXPR_INT:
+            return ExprDouble{ child, i_symbolTable };
+            // TODO: Add more
+        default:
+            DEBUG( child.rule_ );
+            assert( !"Wrong child node!" );
+    }
+}
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
