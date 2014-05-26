@@ -164,6 +164,17 @@ public:
     using Identifier  = Identifiers::const_iterator;
 
     Identifiers variables_;
+    Identifiers classnames_;
+
+    Identifier getClassName( const std::string& i_name ) const
+    {
+        const Identifier result = std::find( classnames_.begin(), classnames_.end(), i_name );
+        if (classnames_.end() == result) {
+            throw std::logic_error{ "No such class!" };
+        }
+
+        return result;
+    }
 
     Identifier getVariable( const std::string& i_name ) const // can throw
     {
@@ -320,8 +331,6 @@ Cmp pareCmp( const node& i_node )
             DEBUG( op_lexeme);
             assert( !"Fail!" );
     }
-
-    // return Cmp::EQ;
 }
 
 struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
@@ -446,6 +455,8 @@ Parameters parseParameters( const node& i_node, const SymbolTable& i_symbolTable
 
     return result;
 }
+
+
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
