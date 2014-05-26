@@ -407,7 +407,7 @@ Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
 using Rightside = boost::variant< Logic, ExprDouble >; // TODO: add more
 Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
 {
-    ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
+    const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
 
     const auto& nodes = boost::get< node::nodes >( i_node.value_ );
     assert( 1 == nodes.size() );
@@ -423,6 +423,28 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
             DEBUG( child.rule_ );
             assert( !"Wrong child node!" );
     }
+}
+
+using Parameters = std::vector< Rightside >;
+Parameters parseParameters( const node& i_node, const SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
+
+    Parameters result;
+
+    const node* pnode = &i_node;
+    while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        assert( 2 == nodes->size() );
+
+        result.emplace_back( parseRightside( (*nodes)[ 0 ], i_symbolTable ) );
+
+        const ProgramElement< lex::rule::PARAM_LIST > assertion{ (*nodes)[1] };
+        pnode = &(*nodes)[1];
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
+
+    return result;
 }
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
