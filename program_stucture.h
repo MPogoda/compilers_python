@@ -182,7 +182,8 @@ struct Print : ProgramElement< lex::rule::PRINTLINE >
 };
 
 struct If;
-using Sline = boost::variant< Assignment, MethodCall, Break, Return, Print, If >;
+struct While;
+using Sline = boost::variant< Assignment, MethodCall, Break, Return, Print, If, While >;
 using Slines = std::vector< Sline >;
 
 struct If : ProgramElement< lex::rule::IFLINE >
@@ -194,5 +195,14 @@ struct If : ProgramElement< lex::rule::IFLINE >
     Slines else_;
 
     If( const node& i_node, const SymbolTable& i_symbolTable );
+};
+
+struct While : ProgramElement< lex::rule::WHILELINE >
+{
+    Logic logic_;
+    SymbolTable localTable_;
+    Slines body_;
+
+    While( const node& i_node, const SymbolTable& i_symbolTable );
 };
 } // namespace sap

@@ -593,6 +593,8 @@ Sline parseSline( const node& i_node, SymbolTable& i_symbolTable )
             return Print{ child, i_symbolTable };
         case lex::rule::IFLINE:
             return If{ child, i_symbolTable };
+        case lex::rule::WHILELINE:
+            return While{ child, i_symbolTable };
             // TODO: Add more
         default:
             DEBUG( child.rule_ );
@@ -642,6 +644,14 @@ If::If( const node& i_node, const SymbolTable& i_symbolTable )
     , then_( parseSlines( boost::get< node::nodes >( i_node.value_ )[ 1 ], thenTable_ ) )
     , elseTable_{ i_symbolTable }
     , else_( parseElse( boost::get< node::nodes >( i_node.value_ )[ 2 ], elseTable_ ) )
+{
+}
+
+While::While( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , logic_{ parseLogic( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
+    , localTable_{ i_symbolTable }
+    , body_( parseSlines( boost::get< node::nodes >( i_node.value_ )[ 1 ], localTable_ ) )
 {
 }
 } // namespace sap
