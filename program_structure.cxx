@@ -654,4 +654,37 @@ While::While( const node& i_node, const SymbolTable& i_symbolTable )
     , body_( parseSlines( boost::get< node::nodes >( i_node.value_ )[ 1 ], localTable_ ) )
 {
 }
+
+SymbolTable::Identifier parseMethodParameter( const node& i_node, SymbolTable& i_symbolTable )
+{
+    ProgramElement< lex::rule::NEW_IDENTIFIER > assertion{ i_node };
+
+    const auto lexeme = boost::get< lex >( i_node.value_);
+    assert( lex::type::IDENTIFIER == lexeme.type_ );
+    const auto name = boost::get< std::string >( lexeme.value_ );
+    if (i_symbolTable.getVariable_o( name )) throw std::logic_error{ "Name is already used!" };
+
+    return i_symbolTable.addVariable( name );
+}
+
+MethodParameters parseMethodParameters( const node& i_node, SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::MPARAMS > assertion{ i_node };
+
+    MethodParameters result;
+
+    const node* pnode = &i_node;
+    while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        assert( 2 == nodes->size() );
+
+        result.emplace_back( parseMethodParameter( (*nodes)[ 0 ], i_symbolTable ) );
+
+        const ProgramElement< lex::rule::MPARAM_LIST > assertion{ (*nodes)[1] };
+        pnode = &(*nodes)[1];
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
+
+    return result;
+}
 } // namespace sap

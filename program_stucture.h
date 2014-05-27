@@ -205,4 +205,6 @@ struct While : ProgramElement< lex::rule::WHILELINE >
 
     While( const node& i_node, const SymbolTable& i_symbolTable );
 };
+
+using MethodParameters = std::vector< SymbolTable::Identifier >;
 } // namespace sap
