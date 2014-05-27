@@ -554,4 +554,48 @@ Assignment::Assignment( const node& i_node, SymbolTable& i_symbolTable )
 {
 }
 
+Break::Break( const node& i_node )
+    : ProgramElement{ i_node }
+{
+    assert( boost::get< lex >( i_node.value_ ).type_ == lex::type::EPS );
+}
+
+Return::Return( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
+{
+}
+
+Print::Print( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
+{
+}
+
+Sline parseSline( const node& i_node, SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::SLINE > assertion{ i_node };
+
+    const auto nodes = boost::get< node::nodes >( i_node.value_ );
+    assert( 1 == nodes.size() );
+
+    const auto& child = nodes[ 0 ];
+    switch (child.rule_) {
+        case lex::rule::MCALL:
+            return MethodCall{ child, i_symbolTable };
+        case lex::rule::BREAKLINE:
+            return Break{ child };
+        case lex::rule::RETURNLINE:
+            return Return{ child, i_symbolTable };
+        case lex::rule::ASSIGNMENT:
+            return Assignment{ child, i_symbolTable };
+        case lex::rule::PRINTLINE:
+            return Print{ child, i_symbolTable };
+            // TODO: Add more
+        default:
+            DEBUG( child.rule_ );
+            assert( !"Wrong child node!" );
+    }
+}
+
 } // namespace sap

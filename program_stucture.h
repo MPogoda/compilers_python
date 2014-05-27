@@ -164,4 +164,24 @@ struct Assignment : ProgramElement< lex::rule::ASSIGNMENT >
     Assignment( const node& i_node, SymbolTable& i_symbolTable );
 };
 
+struct Break : ProgramElement< lex::rule::BREAKLINE >
+{
+    Break( const node& i_node );
+};
+
+struct Return : ProgramElement< lex::rule::RETURNLINE >
+{
+    Rightside rhs_;
+    Return( const node& i_node, const SymbolTable& i_symbolTable );
+};
+
+struct Print : ProgramElement< lex::rule::PRINTLINE >
+{
+    Rightside rhs_;
+    Print( const node& i_node, const SymbolTable& i_symbolTable );
+};
+
+using Sline = boost::variant< Assignment, MethodCall, Break, Return, Print >;
+
+
 }
