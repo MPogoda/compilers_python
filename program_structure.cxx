@@ -136,9 +136,7 @@
 //
 //
 
-#include <vector>
-
-#include "program_tree.h"
+#include "program_stucture.h"
 
 #ifdef NDEBUG
     #define DEBUG(a)
@@ -149,242 +147,177 @@
     #define DBG(a) std::cout << __LINE__ << " : " << a << '\n';
 #endif
 
-#include <string>
 #include <algorithm>
 #include <iterator>
 
-#include <boost/optional.hpp>
-#include <boost/variant.hpp>
-
 namespace sap
 {
-class SymbolTable
+SymbolTable::SymbolTable( const SymbolTable& other )
+    : variables_{ other.variables_ }
+    , classNames_{ other.classNames_ }
+    , methods_{ other.methods_ }
 {
-public:
-    using Identifiers   = std::vector< std::string >;
-    using Identifier    = Identifiers::const_iterator;
-    using Methods       = std::multimap< std::string, uint >; // method → number of parameters
-    using Method        = Methods::const_iterator;
-    using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
+    for (const auto cm : other.classMethods_) {
+        const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
+        const auto methodIndex = std::distance( other.methods_.cbegin(), cm.second );
 
-    Identifiers variables_;     // all visible variables
-    Identifiers classNames_;    // all visible classes
-    ClassMethods classMethods_; // class -> method
-    Methods  methods_;      // all methods
-
-    SymbolTable( const SymbolTable& other )
-        : variables_{ other.variables_ }
-        , classNames_{ other.classNames_ }
-        , methods_{ other.methods_ }
-    {
-        for (const auto cm : other.classMethods_) {
-            const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
-            const auto methodIndex = std::distance( other.methods_.cbegin(), cm.second );
-
-            auto classNameIt = classNames_.cbegin(); std::advance( classNameIt, classNameIndex );
-            auto methodIt    = methods_.cbegin(); std::advance( methodIt, methodIndex );
-
-            classMethods_.insert( { classNameIt, methodIt } );
-        }
+        classMethods_.insert( { std::next( classNames_.cbegin(), classNameIndex )
+                              , std::next( methods_.cbegin(), methodIndex ) } );
     }
+}
 
 
-    boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const
-    {
-        auto eq_range = classMethods_.equal_range( i_className );
-
-        for (; eq_range.second != eq_range.first; ++eq_range.first ) {
-            if (eq_range.first->second->first == i_methodName)
-                return eq_range.first->second;
-        }
-
-        return boost::optional< Method >{};
-    }
-
-    Method getMethod( const Identifier i_className, const std::string& i_methodName ) const
-    {
-        auto result = getMethod_o( i_className, i_methodName );
-        if (!result)
-            throw std::logic_error{ "No such method!" };
-
-        return result.get();
-    }
-
-    // Methods getMethod( const std::string& i_name ) const
-    // {
-    //     Methods result;
-    //     std::copy_if( methods_.cbegin(), methods_.cend(), std::insert_iterator< Methods >( result, result.cend() ),
-    //             [&i_name] ( const Methods::value_type& lhs )
-    //             {
-    //                 return i_name == lhs.first;
-    //             }
-    //             );
-    //     return result;
-    // }
-
-    boost::optional< Identifier > getClassName_o( const std::string& i_name ) const
-    {
-        const Identifier result = std::find( classNames_.cbegin(), classNames_.cend(), i_name );
-
-        if (classNames_.cend() == result)
-            return boost::optional< Identifier >{};
-        return result;
-    }
-
-    Identifier getClassName( const std::string& i_name ) const
-    {
-        auto result = getClassName_o( i_name );
-        if (!result)
-            throw std::logic_error{ "No such class!" };
-
-        return result.get();
-    }
-
-    boost::optional< Identifier > getVariable_o( const std::string& i_name ) const
-    {
-        const Identifier result = std::find( variables_.cbegin(), variables_.cend(), i_name );
-
-        if (variables_.cend() == result)
-            return boost::optional< Identifier >{};
-        return result;
-    }
-
-    Identifier getVariable( const std::string& i_name ) const
-    {
-        auto result = getVariable_o( i_name );
-        if (!result)
-            throw std::logic_error{ "No such variable!" };
-
-        return result.get();
-    }
-
-    void setVariable( const std::string& i_name )
-    {
-        if (getClassName_o( i_name )) {
-            throw std::logic_error{ "Name already exists!" };
-        }
-
-        assert( !getVariable_o( i_name ) );
-    }
-};
-
-template < lex::rule Rule >
-struct ProgramElement
+boost::optional< SymbolTable::Method >
+SymbolTable::getMethod_o( const Identifier i_className, const std::string& i_methodName ) const
 {
-    ProgramElement( const node& i_node )
-    {
-        assert( Rule == i_node.rule_ );
-    }
-};
+    auto eq_range = classMethods_.equal_range( i_className );
 
-struct OperandDouble : ProgramElement< lex::rule::OPERAND_INT >
+    for (; eq_range.second != eq_range.first; ++eq_range.first ) {
+        if (eq_range.first->second->first == i_methodName)
+            return eq_range.first->second;
+    }
+
+    return boost::optional< Method >{};
+}
+
+SymbolTable::Method
+SymbolTable::getMethod( const Identifier i_className, const std::string& i_methodName ) const
 {
-    using Value = boost::variant< SymbolTable::Identifier, double >;
-    Value value_;
+    auto result = getMethod_o( i_className, i_methodName );
+    if (!result)
+        throw std::logic_error{ "No such method!" };
 
-    OperandDouble( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-    {
-        const lex value = boost::get< lex >( i_node.value_);
-        if (value.type_ == lex::type::D_CONST) {
-            value_ = boost::get< double >( value.value_ );
-        } else {
-            assert( value.type_ == lex::type::IDENTIFIER );
+    return result.get();
+}
 
-            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
-
-            // TODO: check type of variable
-        }
-    }
-};
-
-struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
+boost::optional< SymbolTable::Identifier >
+SymbolTable::getClassName_o( const std::string& i_name ) const
 {
-    using Value = boost::variant< SymbolTable::Identifier, bool >;
-    Value value_;
+    const Identifier result = std::find( classNames_.cbegin(), classNames_.cend(), i_name );
 
-    OperandBool( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-    {
-        const lex value = boost::get< lex >( i_node.value_);
-        if (value.type_ == lex::type::B_CONST) {
-            value_ = boost::get< bool >( value.value_ );
-        } else {
-            assert( value.type_ == lex::type::IDENTIFIER );
+    if (classNames_.cend() == result)
+        return boost::optional< Identifier >{};
+    return result;
+}
 
-            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
-
-            // TODO: check type of variable
-        }
-    }
-};
-
-struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
+SymbolTable::Identifier
+SymbolTable::getClassName( const std::string& i_name ) const
 {
-    using Value = boost::variant< SymbolTable::Identifier, std::string >;
-    Value value_;
+    const auto result = getClassName_o( i_name );
+    if (!result)
+        throw std::logic_error{ "No such class!" };
 
-    OperandString( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-    {
-        const lex value = boost::get< lex >( i_node.value_);
-        if (value.type_ == lex::type::S_CONST) {
-            value_ = boost::get< std::string >( value.value_ );
-        } else {
-            assert( value.type_ == lex::type::IDENTIFIER );
+    return result.get();
+}
 
-            value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
-
-            // TODO: check type of variable
-        }
-    }
-};
-
-struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
+boost::optional< SymbolTable::Identifier >
+SymbolTable::getVariable_o( const std::string& i_name ) const
 {
-    OperandDouble  lhs_;
-    enum class Op { PLUS, MINUS, MULT, DIV };
-    boost::optional< Op > op_;
-    boost::optional< OperandDouble >  rhs_;
+    const Identifier result = std::find( variables_.cbegin(), variables_.cend(), i_name );
 
-    ExprDouble( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
-    {
-        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+    if (variables_.cend() == result)
+        return boost::optional< Identifier >{};
+    return result;
+}
 
-        if (nodes.size() == 3) {
-            const auto& op_node = nodes[ 1 ];
-            assert( lex::rule::OPERATOR_INT == op_node.rule_ );
-            const lex op_lexeme = boost::get< lex >( op_node.value_ );
-            assert( lex::type::SYMBOL == op_lexeme.type_ );
-            switch (boost::get< lex::symbol >(op_lexeme.value_)) {
-                case lex::symbol::PLUS:
-                    op_ = Op::PLUS;
-                    break;
-                case lex::symbol::MINUS:
-                    op_ = Op::MINUS;
-                    break;
-                case lex::symbol::STAR:
-                    op_ = Op::MULT;
-                    break;
-                case lex::symbol::SLASH:
-                    op_ = Op::DIV;
-                    break;
-                default:
-                    DEBUG( op_lexeme);
-                    assert( !"Fail!" );
-            }
+SymbolTable::Identifier
+SymbolTable::getVariable( const std::string& i_name ) const
+{
+    auto result = getVariable_o( i_name );
+    if (!result)
+        throw std::logic_error{ "No such variable!" };
 
-            rhs_ = OperandDouble{  nodes[ 2 ], i_symbolTable };
-        } else if (nodes.size() != 1) {
-            throw std::logic_error{ "Wrong number of lexemes in expression!" };
-        }
+    return result.get();
+}
+
+OperandDouble::OperandDouble( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+{
+    const lex value = boost::get< lex >( i_node.value_);
+    if (value.type_ == lex::type::D_CONST) {
+        value_ = boost::get< double >( value.value_ );
+    } else {
+        assert( value.type_ == lex::type::IDENTIFIER );
+
+        value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+        // TODO: check type of variable
     }
-};
+}
 
-enum class Cmp { EQ, NE, LE, GE };
-Cmp pareCmp( const node& i_node )
+OperandBool::OperandBool( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+{
+    const lex value = boost::get< lex >( i_node.value_);
+    if (value.type_ == lex::type::B_CONST) {
+        value_ = boost::get< bool >( value.value_ );
+    } else {
+        assert( value.type_ == lex::type::IDENTIFIER );
+
+        value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+        // TODO: check type of variable
+    }
+}
+
+OperandString::OperandString( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+{
+    const lex value = boost::get< lex >( i_node.value_);
+    if (value.type_ == lex::type::S_CONST) {
+        value_ = boost::get< std::string >( value.value_ );
+    } else {
+        assert( value.type_ == lex::type::IDENTIFIER );
+
+        value_ = i_symbolTable.getVariable( boost::get< std::string >( value.value_ ) );
+
+        // TODO: check type of variable
+    }
+}
+
+ExprDouble::Op parseOp( const node& op_node )
+{
+    ProgramElement< lex::rule::OPERATOR_INT > assertion{ op_node };
+
+    const lex op_lexeme = boost::get< lex >( op_node.value_ );
+    assert( lex::type::SYMBOL == op_lexeme.type_ );
+    switch (boost::get< lex::symbol >(op_lexeme.value_)) {
+        case lex::symbol::PLUS:
+            return ExprDouble::Op::PLUS;
+            break;
+        case lex::symbol::MINUS:
+            return ExprDouble::Op::MINUS;
+            break;
+        case lex::symbol::STAR:
+            return ExprDouble::Op::MULT;
+            break;
+        case lex::symbol::SLASH:
+            return ExprDouble::Op::DIV;
+            break;
+        default:
+            DEBUG( op_lexeme);
+            assert( !"Fail!" );
+    }
+}
+
+ExprDouble::ExprDouble( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+    , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+{
+    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+
+    if (nodes.size() == 3) {
+        const auto& op_node = nodes[ 1 ];
+
+        op_ = parseOp( op_node );
+
+        rhs_ = OperandDouble{  nodes[ 2 ], i_symbolTable };
+    } else if (nodes.size() != 1) {
+        throw std::logic_error{ "Wrong number of lexemes in expression!" };
+    }
+}
+
+Cmp parseCmp( const node& i_node )
 {
     assert( (lex::rule::COMPARATOR_EQ == i_node.rule_) || (lex::rule::COMPARATOR_INT == i_node.rule_ ));
 
@@ -414,65 +347,43 @@ Cmp pareCmp( const node& i_node )
     }
 }
 
-struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
+LogicBool::LogicBool( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+    , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
 {
-    OperandBool  lhs_;
-    boost::optional< Cmp > cmp_;
-    boost::optional< OperandBool >  rhs_;
+    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
 
-    LogicBool( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
-    {
-        const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+    if (nodes.size() == 3) {
+        cmp_ = parseCmp( nodes[ 1 ] );
 
-        if (nodes.size() == 3) {
-            cmp_ = pareCmp( nodes[ 1 ] );
-
-            rhs_ = OperandBool{  nodes[ 2 ], i_symbolTable };
-        } else if (nodes.size() != 1) {
-            throw std::logic_error{ "Wrong number of lexemes in expression!" };
-        }
+        rhs_ = OperandBool{  nodes[ 2 ], i_symbolTable };
+    } else if (nodes.size() != 1) {
+        throw std::logic_error{ "Wrong number of lexemes in expression!" };
     }
-};
+}
 
-struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
+LogicDouble::LogicDouble( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+    , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+    , cmp_{ parseCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
+    , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
 {
-    OperandDouble  lhs_;
-    Cmp cmp_;
-    OperandDouble rhs_;
-
-    LogicDouble( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
-        , cmp_{ pareCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
-        , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
-    {
-        if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
-            throw std::logic_error{ "Wrong number of lexemes in expression!" };
-        }
+    if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
+        throw std::logic_error{ "Wrong number of lexemes in expression!" };
     }
-};
+}
 
-struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
+LogicString::LogicString( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+    , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
+    , cmp_{ parseCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
+    , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
 {
-    OperandString  lhs_;
-    Cmp cmp_;
-    OperandString rhs_;
-
-    LogicString( const node& i_node, const SymbolTable& i_symbolTable )
-        : ProgramElement( i_node )
-        , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
-        , cmp_{ pareCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
-        , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
-    {
-        if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
-            throw std::logic_error{ "Wrong number of lexemes in expression!" };
-        }
+    if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
+        throw std::logic_error{ "Wrong number of lexemes in expression!" };
     }
-};
+}
 
-using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
 {
     ProgramElement< lex::rule::LOGIC > assertion{ i_node };
@@ -494,9 +405,8 @@ Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
     }
 }
 
-using Constructor = SymbolTable::Identifier;
 Constructor parseConstructor( const node& i_node, const SymbolTable& i_symbolTable );
-using Rightside = boost::variant< Logic, ExprDouble, Constructor >; // TODO: add more
+
 Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
 {
     const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
@@ -512,6 +422,8 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
             return ExprDouble{ child, i_symbolTable };
         case lex::rule::FCALL:
             return parseConstructor( child, i_symbolTable );
+        case lex::rule::MCALL:
+            return MethodCall{ child, i_symbolTable };
             // TODO: Add more
         default:
             DEBUG( child.rule_ );
@@ -519,7 +431,6 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
     }
 }
 
-using Parameters = std::vector< Rightside >;
 Parameters parseParameters( const node& i_node, const SymbolTable& i_symbolTable )
 {
     const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
@@ -560,6 +471,47 @@ Constructor parseConstructor( const node& i_node, const SymbolTable& i_symbolTab
         return i_symbolTable.getClassName( boost::get< std::string >( lexeme.value_ ) );
     }
 }
+
+Applicable::Applicable( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+{
+    if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
+        // it's a constructor
+        assert( 1 == nodes->size() );
+        class_ = parseConstructor( (*nodes)[ 0 ], i_symbolTable );
+    } else {
+        const lex id = boost::get< lex >( i_node.value_ );
+        assert( lex::type::IDENTIFIER == id.type_ );
+
+        object_ = i_symbolTable.getVariable( boost::get< std::string >( id.value_ ) );
+    }
+}
+
+MethodCall::MethodCall( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement( i_node )
+    , lhs_{ boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable }
+{
+    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
+    assert( 2 == nodes.size() );
+    const auto& fnode = nodes[ 1 ];
+    {
+        const ProgramElement< lex::rule::FCALL > assertion{ fnode };
+
+        const auto& children = boost::get< node::nodes >( fnode.value_ );
+        assert( 2 == children.size() );
+
+        params_ = parseParameters( children[ 1 ], i_symbolTable );
+
+        {
+            const auto& id_node = children[ 0 ];
+            const ProgramElement< lex::rule::NEW_IDENTIFIER > assertion{ id_node };
+
+            const auto& lexeme = boost::get< lex >( id_node.value_ );
+            method_ = boost::get< std::string >( lexeme.value_ );
+        }
+    }
+}
+
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
