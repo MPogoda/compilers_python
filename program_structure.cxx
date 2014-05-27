@@ -591,6 +591,8 @@ Sline parseSline( const node& i_node, SymbolTable& i_symbolTable )
             return Assignment{ child, i_symbolTable };
         case lex::rule::PRINTLINE:
             return Print{ child, i_symbolTable };
+        case lex::rule::IFLINE:
+            return If{ child, i_symbolTable };
             // TODO: Add more
         default:
             DEBUG( child.rule_ );
@@ -598,4 +600,48 @@ Sline parseSline( const node& i_node, SymbolTable& i_symbolTable )
     }
 }
 
+Slines parseSlines( const node& i_node, SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::SLINE > assertion{ i_node };
+
+    Slines result;
+
+    const node* pnode = &i_node;
+    while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        assert( 2 == nodes->size() );
+
+        result.emplace_back( parseSline( (*nodes)[ 0 ], i_symbolTable ) );
+
+        const ProgramElement< lex::rule::SLINE_LIST > assertion{ (*nodes)[1] };
+        pnode = &(*nodes)[1];
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
+
+    return result;
+}
+
+Slines parseElse( const node& i_node, SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::ELSELINE > assertion{ i_node };
+
+    if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
+        assert( 1 == nodes->size() );
+        return parseSlines( (*nodes)[ 0 ], i_symbolTable );
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( i_node.value_ ).type_ );
+
+    return {};
+}
+
+If::If( const node& i_node, const SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , logic_{ parseLogic( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
+    , thenTable_{ i_symbolTable }
+    , then_( parseSlines( boost::get< node::nodes >( i_node.value_ )[ 1 ], thenTable_ ) )
+    , elseTable_{ i_symbolTable }
+    , else_( parseElse( boost::get< node::nodes >( i_node.value_ )[ 2 ], elseTable_ ) )
+{
+}
 } // namespace sap

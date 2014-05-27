@@ -125,7 +125,7 @@ using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 using Constructor = SymbolTable::Identifier;
 struct MethodCall;
 struct Input;
-using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input, std::string >; // TODO: add more
+using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input, std::string >;
 using Parameters = std::vector< Rightside >;
 
 struct Applicable : ProgramElement< lex::rule::APPLICABLE >
@@ -181,7 +181,18 @@ struct Print : ProgramElement< lex::rule::PRINTLINE >
     Print( const node& i_node, const SymbolTable& i_symbolTable );
 };
 
-using Sline = boost::variant< Assignment, MethodCall, Break, Return, Print >;
+struct If;
+using Sline = boost::variant< Assignment, MethodCall, Break, Return, Print, If >;
+using Slines = std::vector< Sline >;
 
+struct If : ProgramElement< lex::rule::IFLINE >
+{
+    Logic logic_;
+    SymbolTable thenTable_;
+    Slines then_;
+    SymbolTable elseTable_;
+    Slines else_;
 
-}
+    If( const node& i_node, const SymbolTable& i_symbolTable );
+};
+} // namespace sap
