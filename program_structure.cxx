@@ -721,4 +721,26 @@ MethodDecl::MethodDecl( const node& i_node, SymbolTable& i_symbolTable )
     , body_( parseSlines( boost::get< node::nodes >( i_node.value_)[ 2 ], local_ ) )
 {
 }
+
+MethodDecls parseMethodDecls( const node& i_node, SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::METHODS > assertion{ i_node };
+
+    MethodDecls result;
+
+    const node* pnode = &i_node;
+    while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        assert( 2 == nodes->size() );
+
+        result.emplace_back( (*nodes)[ 0 ], i_symbolTable );
+
+        const ProgramElement< lex::rule::METHOD_LIST > assertion{ (*nodes)[1] };
+        pnode = &(*nodes)[1];
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
+
+    return result;
+}
+
 } // namespace sap

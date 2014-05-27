@@ -221,4 +221,6 @@ struct MethodDecl : ProgramElement< lex::rule::METHOD_DECL >
 
     MethodDecl( const node& i_node, SymbolTable& i_symbolTable );
 };
+
+using MethodDecls = std::vector< MethodDecl >;
 } // namespace sap
