@@ -155,7 +155,7 @@ namespace sap
 SymbolTable::SymbolTable( const SymbolTable& other )
     : variables_{ other.variables_ }
     , classNames_{ other.classNames_ }
-    , methods_{ other.methods_ }
+    // , methods_{ other.methods_ }
 {
     // for (const auto cm : other.classMethods_) {
     //     const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
@@ -686,5 +686,39 @@ MethodParameters parseMethodParameters( const node& i_node, SymbolTable& i_symbo
     assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
 
     return result;
+}
+
+boost::optional< SymbolTable::Identifier >
+SymbolTable::getMethod_o( const std::string& i_name ) const
+{
+    const Identifier result = std::find( methods_.cbegin(), methods_.cend(), i_name );
+
+    if (methods_.cend() == result)
+        return boost::optional< Identifier >{};
+    return result;
+}
+
+SymbolTable::Identifier
+SymbolTable::addMethod( const std::string& i_name )
+{
+    if (getClassName_o( i_name )) {
+        throw std::logic_error{ "Name is used by class!" };
+    }
+
+    auto result = getMethod_o( i_name );
+    if (result) throw std::logic_error{ "Method is already declared!" };
+
+    methods_.push_back( i_name );
+    return std::next( methods_.cbegin(), methods_.size() - 1 );
+}
+
+MethodDecl::MethodDecl( const node& i_node, SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , name_{ i_symbolTable.addMethod( boost::get< std::string >(
+                                boost::get< node::nodes >( i_node.value_)[ 0 ].value_)) }
+    , local_{ i_symbolTable }
+    , params_( parseMethodParameters( boost::get< node::nodes >( i_node.value_)[ 1 ], local_) )
+    , body_( parseSlines( boost::get< node::nodes >( i_node.value_)[ 2 ], local_ ) )
+{
 }
 } // namespace sap

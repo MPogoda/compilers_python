@@ -16,14 +16,15 @@ class SymbolTable
 public:
     using Identifiers   = std::list< std::string >;
     using Identifier    = Identifiers::const_iterator;
-    using Methods       = std::multimap< std::string, uint >; // method → number of parameters
-    using Method        = Methods::const_iterator;
+    // using Methods       = std::multimap< std::string, uint >; // method → number of parameters
+    // using Method        = Methods::const_iterator;
     // using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
 
     Identifiers variables_;     // all visible variables
     Identifiers classNames_;    // all visible classes
     // ClassMethods classMethods_; // class -> method
-    Methods  methods_;      // all methods
+    // Methods  methods_;      // all methods
+    Identifiers methods_;
 
     SymbolTable( const SymbolTable& other );
     // boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const;
@@ -42,10 +43,13 @@ public:
 
     boost::optional< Identifier > getClassName_o( const std::string& i_name ) const;
     Identifier getClassName( const std::string& i_name ) const;
+
     boost::optional< Identifier > getVariable_o( const std::string& i_name ) const;
     Identifier getVariable( const std::string& i_name ) const;
-
     Identifier addVariable( const std::string& i_name );
+
+    boost::optional< Identifier > getMethod_o( const std::string& i_name ) const;
+    Identifier addMethod( const std::string& i_name );
 };
 
 template < lex::rule Rule >
@@ -207,4 +211,14 @@ struct While : ProgramElement< lex::rule::WHILELINE >
 };
 
 using MethodParameters = std::vector< SymbolTable::Identifier >;
+
+struct MethodDecl : ProgramElement< lex::rule::METHOD_DECL >
+{
+    SymbolTable::Identifier name_;
+    SymbolTable local_;
+    MethodParameters params_;
+    Slines body_;
+
+    MethodDecl( const node& i_node, SymbolTable& i_symbolTable );
+};
 } // namespace sap
