@@ -151,6 +151,7 @@
 
 #include <string>
 #include <algorithm>
+#include <iterator>
 
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
@@ -162,7 +163,7 @@ class SymbolTable
 public:
     using Identifiers   = std::vector< std::string >;
     using Identifier    = Identifiers::const_iterator;
-    using Methods       = std::map< std::string, uint >; // method → number of parameters
+    using Methods       = std::multimap< std::string, uint >; // method → number of parameters
     using Method        = Methods::const_iterator;
     using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
 
@@ -188,7 +189,7 @@ public:
     }
 
 
-    Method getMethod( const Identifier i_className, const std::string& i_methodName ) const
+    boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const
     {
         auto eq_range = classMethods_.equal_range( i_className );
 
@@ -197,28 +198,73 @@ public:
                 return eq_range.first->second;
         }
 
-        throw std::logic_error{ "Method not found!" };
+        return boost::optional< Method >{};
     }
 
+    Method getMethod( const Identifier i_className, const std::string& i_methodName ) const
+    {
+        auto result = getMethod_o( i_className, i_methodName );
+        if (!result)
+            throw std::logic_error{ "No such method!" };
+
+        return result.get();
+    }
+
+    // Methods getMethod( const std::string& i_name ) const
+    // {
+    //     Methods result;
+    //     std::copy_if( methods_.cbegin(), methods_.cend(), std::insert_iterator< Methods >( result, result.cend() ),
+    //             [&i_name] ( const Methods::value_type& lhs )
+    //             {
+    //                 return i_name == lhs.first;
+    //             }
+    //             );
+    //     return result;
+    // }
+
+    boost::optional< Identifier > getClassName_o( const std::string& i_name ) const
+    {
+        const Identifier result = std::find( classNames_.cbegin(), classNames_.cend(), i_name );
+
+        if (classNames_.cend() == result)
+            return boost::optional< Identifier >{};
+        return result;
+    }
 
     Identifier getClassName( const std::string& i_name ) const
     {
-        const Identifier result = std::find( classNames_.begin(), classNames_.end(), i_name );
-        if (classNames_.end() == result) {
+        auto result = getClassName_o( i_name );
+        if (!result)
             throw std::logic_error{ "No such class!" };
-        }
 
+        return result.get();
+    }
+
+    boost::optional< Identifier > getVariable_o( const std::string& i_name ) const
+    {
+        const Identifier result = std::find( variables_.cbegin(), variables_.cend(), i_name );
+
+        if (variables_.cend() == result)
+            return boost::optional< Identifier >{};
         return result;
     }
 
-    Identifier getVariable( const std::string& i_name ) const // can throw
+    Identifier getVariable( const std::string& i_name ) const
     {
-        const Identifier result = std::find( variables_.begin(), variables_.end(), i_name );
-        if (variables_.end() == result) {
+        auto result = getVariable_o( i_name );
+        if (!result)
             throw std::logic_error{ "No such variable!" };
+
+        return result.get();
+    }
+
+    void setVariable( const std::string& i_name )
+    {
+        if (getClassName_o( i_name )) {
+            throw std::logic_error{ "Name already exists!" };
         }
 
-        return result;
+        assert( !getVariable_o( i_name ) );
     }
 };
 
