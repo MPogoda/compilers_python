@@ -413,7 +413,9 @@ Logic parseLogic( const node& i_node, const SymbolTable& i_symbolTable )
     }
 }
 
-using Rightside = boost::variant< Logic, ExprDouble >; // TODO: add more
+using Constructor = SymbolTable::Identifier;
+Constructor parseConstructor( const node& i_node, const SymbolTable& i_symbolTable );
+using Rightside = boost::variant< Logic, ExprDouble, Constructor >; // TODO: add more
 Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
 {
     const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
@@ -427,6 +429,8 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
             return parseLogic( child, i_symbolTable );
         case lex::rule::EXPR_INT:
             return ExprDouble{ child, i_symbolTable };
+        case lex::rule::FCALL:
+            return parseConstructor( child, i_symbolTable );
             // TODO: Add more
         default:
             DEBUG( child.rule_ );
@@ -456,7 +460,25 @@ Parameters parseParameters( const node& i_node, const SymbolTable& i_symbolTable
     return result;
 }
 
+Constructor parseConstructor( const node& i_node, const SymbolTable& i_symbolTable )
+{
+    const ProgramElement< lex::rule::FCALL > assertion{ i_node };
 
+    const auto& children = boost::get< node::nodes >( i_node.value_ );
+    assert( 2 == children.size() );
+
+    {
+        assert( parseParameters( children[ 1 ], i_symbolTable ).size() == 0 );
+    }
+
+    {
+        const auto& id_node = children[ 0 ];
+        const ProgramElement< lex::rule::NEW_IDENTIFIER > assertion{ id_node };
+
+        const auto& lexeme = boost::get< lex >( id_node.value_ );
+        return i_symbolTable.getClassName( boost::get< std::string >( lexeme.value_ ) );
+    }
+}
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
 //
 // using identifier_table = std::unordered_map< std::string, variable_name >;
