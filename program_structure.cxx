@@ -157,38 +157,38 @@ SymbolTable::SymbolTable( const SymbolTable& other )
     , classNames_{ other.classNames_ }
     , methods_{ other.methods_ }
 {
-    for (const auto cm : other.classMethods_) {
-        const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
-        const auto methodIndex = std::distance( other.methods_.cbegin(), cm.second );
-
-        classMethods_.insert( { std::next( classNames_.cbegin(), classNameIndex )
-                              , std::next( methods_.cbegin(), methodIndex ) } );
-    }
+    // for (const auto cm : other.classMethods_) {
+    //     const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
+    //     const auto methodIndex = std::distance( other.methods_.cbegin(), cm.second );
+    //
+    //     classMethods_.insert( { std::next( classNames_.cbegin(), classNameIndex )
+    //                           , std::next( methods_.cbegin(), methodIndex ) } );
+    // }
 }
 
 
-boost::optional< SymbolTable::Method >
-SymbolTable::getMethod_o( const Identifier i_className, const std::string& i_methodName ) const
-{
-    auto eq_range = classMethods_.equal_range( i_className );
-
-    for (; eq_range.second != eq_range.first; ++eq_range.first ) {
-        if (eq_range.first->second->first == i_methodName)
-            return eq_range.first->second;
-    }
-
-    return boost::optional< Method >{};
-}
-
-SymbolTable::Method
-SymbolTable::getMethod( const Identifier i_className, const std::string& i_methodName ) const
-{
-    auto result = getMethod_o( i_className, i_methodName );
-    if (!result)
-        throw std::logic_error{ "No such method!" };
-
-    return result.get();
-}
+// boost::optional< SymbolTable::Method >
+// SymbolTable::getMethod_o( const Identifier i_className, const std::string& i_methodName ) const
+// {
+//     auto eq_range = classMethods_.equal_range( i_className );
+//
+//     for (; eq_range.second != eq_range.first; ++eq_range.first ) {
+//         if (eq_range.first->second->first == i_methodName)
+//             return eq_range.first->second;
+//     }
+//
+//     return boost::optional< Method >{};
+// }
+//
+// SymbolTable::Method
+// SymbolTable::getMethod( const Identifier i_className, const std::string& i_methodName ) const
+// {
+//     auto result = getMethod_o( i_className, i_methodName );
+//     if (!result)
+//         throw std::logic_error{ "No such method!" };
+//
+//     return result.get();
+// }
 
 boost::optional< SymbolTable::Identifier >
 SymbolTable::getClassName_o( const std::string& i_name ) const
@@ -411,25 +411,28 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
 {
     const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
 
-    const auto& nodes = boost::get< node::nodes >( i_node.value_ );
-    assert( 1 == nodes.size() );
+    if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
+        assert( 1 == nodes->size() );
 
-    const auto& child = nodes[ 0 ];
-    switch (child.rule_) {
-        case lex::rule::LOGIC:
-            return parseLogic( child, i_symbolTable );
-        case lex::rule::EXPR_INT:
-            return ExprDouble{ child, i_symbolTable };
-        case lex::rule::FCALL:
-            return parseConstructor( child, i_symbolTable );
-        case lex::rule::MCALL:
-            return MethodCall{ child, i_symbolTable };
-        case lex::rule::INPUT:
-            return Input{ child };
-            // TODO: Add more
-        default:
-            DEBUG( child.rule_ );
-            assert( !"Wrong child node!" );
+        const auto& child = (*nodes)[ 0 ];
+        switch (child.rule_) {
+            case lex::rule::LOGIC:
+                return parseLogic( child, i_symbolTable );
+            case lex::rule::EXPR_INT:
+                return ExprDouble{ child, i_symbolTable };
+            case lex::rule::FCALL:
+                return parseConstructor( child, i_symbolTable );
+            case lex::rule::MCALL:
+                return MethodCall{ child, i_symbolTable };
+            case lex::rule::INPUT:
+                return Input{ child };
+                // TODO: Add more
+            default:
+                DEBUG( child.rule_ );
+                assert( !"Wrong child node!" );
+        }
+    } else {
+        return boost::get< std::string >( i_node.value_ );
     }
 }
 
@@ -520,126 +523,35 @@ Input::Input( const node& i_node )
     assert( lex::type::EPS == boost::get< lex >( i_node.value_ ).type_ );
 }
 
-// enum class variable_name : uint8_t { CLASS , METHOD , VAR};
-//
-// using identifier_table = std::unordered_map< std::string, variable_name >;
-//
-//
-// using identifiers = std::vector< std::string >;
-// using identifier  = identifiers::const_iterator;
-// using double_constants = std::vector< double >;
-// using double_constant  = double_constants::const_iterator;
-// using bool_constants   = std::vector< bool >;
-// using bool_constant    = bool_constants::const_iterator;
-// using string_constants = std::vector< std::string >;
-// using string_constant  = string_constants::const_iterator;
-//
-// using operand_double = boost::variant< identifier, double_constant >;
-// using operand_bool   = boost::variant< identifier, bool_constant >;
-// using operand_string = boost::variant< identifier, string_constant >;
-//
-// enum class operator_double : uint8_t { NONE, PLUS, MINUS, MULT, DIV };
-// struct expr_int
-// {
-//     // expr_int( LIterator it, const identifiers inherited ) {
-//     //     if (
-//     // }
-//     operand_double lhs;
-//     operator_double  op;
-//     operand_double rhs;
-// };
-//
-// enum class comparator_eq : uint8_t { EQ, NE };
-// enum class comparator_double : uint8_t { EQ, NE, LE, GE };
-//
-// struct logic_double
-// {
-//     operand_double lhs;
-//     comparator_double cmp;
-//     operand_double rhs;
-// };
-//
-// struct logic_bool_b
-// {
-//     operand_bool lhs;
-//     comparator_eq cmp;
-//     operand_bool rhs;
-// };
-// using logic_bool = boost::variant< operand_bool, logic_bool_b >;
-//
-// struct logic_string
-// {
-//     operand_string lhs;
-//     comparator_eq cmp;
-//     operand_string rhs;
-// };
-//
-// using logic = boost::variant< logic_double, logic_bool, logic_string >;
-//
-// using constructor = identifier;
-//
-// using applicable = identifier;
-//
-// struct method_call {
-//     applicable lhs;
-//     identifier rhs;
-//     // params
-// };
-//
-// enum class reserved : uint8_t { READ, WRITE, BREAK };
-//
-// using rightside = boost::variant< logic, expr_int, reserved, constructor, method_call, string_constant >;
-//
-// struct assignment
-// {
-//     identifier lhs;
-//     rightside rhs;
-// };
-//
-// struct returnline { rightside what; };
-//
-// struct ifline;
-// struct whileline;
-// using sline = boost::variant< assignment, reserved, returnline, ifline, whileline, method_call>;
-//
-// struct slines {
-//     std::vector< sline > lines;
-//     identifiers locals;
-//     const identifiers inherited;
-//
-//     slines( const identifiers i_inherited ) : inherited{ i_inherited } {}
-//
-// };
-//
-//
-// struct ifline {
-//     logic lhs;
-//     slines thenpart;
-//     slines elsepart;
-// };
-//
-// struct whileline {
-//     logic condition;
-//     slines body;
-// };
-//
-// struct method {
-//     identifier name;
-//     identifiers params;
-//     identifiers ids;
-//     slines body;
-// };
-//
-// struct classdecl {
-//     identifier name;
-//     identifiers methods;
-//     std::vector< method > method_definitions;
-// };
-//
-// struct program {
-//     identifiers classes;
-//     std::vector< classdecl > class_decls;
-//     method_call main;
-// };
-//
+SymbolTable::Identifier
+SymbolTable::addVariable( const std::string& i_name )
+{
+    if (getClassName_o( i_name )) {
+        throw std::logic_error{ "Name is used by class!" };
+    }
+
+    auto result = getVariable_o( i_name );
+    if (result) return result.get();
+
+    variables_.push_back( i_name );
+    return std::next( variables_.cbegin(), variables_.size() - 1 );
+}
+
+NewVariable::NewVariable( const node& i_node, SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+{
+    const auto& child = boost::get< lex >( i_node.value_ );
+    assert( lex::type::IDENTIFIER == child.type_ );
+    const auto name = boost::get< std::string >( child.value_ );
+
+    this_ = i_symbolTable.addVariable( name );
+}
+
+Assignment::Assignment( const node& i_node, SymbolTable& i_symbolTable )
+    : ProgramElement{ i_node }
+    , lhs_{ boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable }
+    , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 1 ], i_symbolTable ) }
+{
+}
+
 } // namespace sap

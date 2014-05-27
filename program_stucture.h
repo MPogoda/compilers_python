@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <list>
 
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
@@ -13,20 +14,20 @@ namespace sap
 class SymbolTable
 {
 public:
-    using Identifiers   = std::vector< std::string >;
+    using Identifiers   = std::list< std::string >;
     using Identifier    = Identifiers::const_iterator;
     using Methods       = std::multimap< std::string, uint >; // method → number of parameters
     using Method        = Methods::const_iterator;
-    using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
+    // using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
 
     Identifiers variables_;     // all visible variables
     Identifiers classNames_;    // all visible classes
-    ClassMethods classMethods_; // class -> method
+    // ClassMethods classMethods_; // class -> method
     Methods  methods_;      // all methods
 
     SymbolTable( const SymbolTable& other );
-    boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const;
-    Method getMethod( const Identifier i_className, const std::string& i_methodName ) const;
+    // boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const;
+    // Method getMethod( const Identifier i_className, const std::string& i_methodName ) const;
     // Methods getMethod( const std::string& i_name ) const
     // {
     //     Methods result;
@@ -43,6 +44,8 @@ public:
     Identifier getClassName( const std::string& i_name ) const;
     boost::optional< Identifier > getVariable_o( const std::string& i_name ) const;
     Identifier getVariable( const std::string& i_name ) const;
+
+    Identifier addVariable( const std::string& i_name );
 };
 
 template < lex::rule Rule >
@@ -122,7 +125,7 @@ using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 using Constructor = SymbolTable::Identifier;
 struct MethodCall;
 struct Input;
-using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input>; // TODO: add more
+using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input, std::string >; // TODO: add more
 using Parameters = std::vector< Rightside >;
 
 struct Applicable : ProgramElement< lex::rule::APPLICABLE >
@@ -145,6 +148,20 @@ struct MethodCall : ProgramElement< lex::rule::MCALL >
 struct Input : ProgramElement< lex::rule::INPUT >
 {
     Input( const node& i_node );
+};
+
+struct NewVariable : ProgramElement< lex::rule::NEW_IDENTIFIER >
+{
+    SymbolTable::Identifier this_;
+    NewVariable( const node& i_node, SymbolTable& i_symbolTable );
+};
+
+
+struct Assignment : ProgramElement< lex::rule::ASSIGNMENT >
+{
+    NewVariable lhs_;
+    Rightside rhs_;
+    Assignment( const node& i_node, SymbolTable& i_symbolTable );
 };
 
 }
