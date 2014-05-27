@@ -162,14 +162,47 @@ class SymbolTable
 public:
     using Identifiers = std::vector< std::string >;
     using Identifier  = Identifiers::const_iterator;
+    using ClassMethods = std::multimap< Identifier, Identifier >; // class -> method
 
-    Identifiers variables_;
-    Identifiers classnames_;
+    Identifiers variables_;     // all visible variables
+    Identifiers classNames_;    // all visible classes
+    ClassMethods classMethods_; // class -> method
+    Identifiers  methods_;      // all methods
+
+    SymbolTable( const SymbolTable& other )
+        : variables_{ other.variables_ }
+        , classNames_{ other.classNames_ }
+        , methods_{ other.methods_ }
+    {
+        for (const auto cm : other.classMethods_) {
+            const auto classNameIndex = std::distance( other.classNames_.cbegin(), cm.first );
+            const auto methodIndex = std::distance( other.methods_.cbegin(), cm.second );
+
+            Identifier classNameIt = classNames_.cbegin(); std::advance( classNameIt, classNameIndex );
+            Identifier methodIt    = methods_.cbegin(); std::advance( methodIt, methodIndex );
+
+            classMethods_.insert( { classNameIt, methodIt } );
+        }
+    }
+
+
+    Identifier getMethod( const Identifier i_className, const std::string& i_methodName ) const
+    {
+        auto eq_range = classMethods_.equal_range( i_className );
+
+        for (; eq_range.second != eq_range.first; ++eq_range.first ) {
+            if (*eq_range.first->second == i_methodName)
+                return eq_range.first->second;
+        }
+
+        throw std::logic_error{ "Method not found!" };
+    }
+
 
     Identifier getClassName( const std::string& i_name ) const
     {
-        const Identifier result = std::find( classnames_.begin(), classnames_.end(), i_name );
-        if (classnames_.end() == result) {
+        const Identifier result = std::find( classNames_.begin(), classNames_.end(), i_name );
+        if (classNames_.end() == result) {
             throw std::logic_error{ "No such class!" };
         }
 
