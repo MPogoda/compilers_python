@@ -121,7 +121,8 @@ using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 
 using Constructor = SymbolTable::Identifier;
 struct MethodCall;
-using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall >; // TODO: add more
+struct Input;
+using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input>; // TODO: add more
 using Parameters = std::vector< Rightside >;
 
 struct Applicable : ProgramElement< lex::rule::APPLICABLE >
@@ -139,6 +140,11 @@ struct MethodCall : ProgramElement< lex::rule::MCALL >
     Parameters params_;
 
     MethodCall( const node& i_node, const SymbolTable& i_symbolTable );
+};
+
+struct Input : ProgramElement< lex::rule::INPUT >
+{
+    Input( const node& i_node );
 };
 
 }

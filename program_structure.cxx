@@ -424,6 +424,8 @@ Rightside parseRightside( const node& i_node, const SymbolTable& i_symbolTable )
             return parseConstructor( child, i_symbolTable );
         case lex::rule::MCALL:
             return MethodCall{ child, i_symbolTable };
+        case lex::rule::INPUT:
+            return Input{ child };
             // TODO: Add more
         default:
             DEBUG( child.rule_ );
@@ -510,6 +512,12 @@ MethodCall::MethodCall( const node& i_node, const SymbolTable& i_symbolTable )
             method_ = boost::get< std::string >( lexeme.value_ );
         }
     }
+}
+
+Input::Input( const node& i_node )
+    : ProgramElement{ i_node }
+{
+    assert( lex::type::EPS == boost::get< lex >( i_node.value_ ).type_ );
 }
 
 // enum class variable_name : uint8_t { CLASS , METHOD , VAR};
