@@ -11,45 +11,73 @@
 
 namespace sap
 {
-class SymbolTable
+struct ClassScope;
+using Identifiers   = std::list< std::string >;
+using Identifier    = Identifiers::const_iterator;
+struct GlobalScope
 {
-public:
-    using Identifiers   = std::list< std::string >;
-    using Identifier    = Identifiers::const_iterator;
-    // using Methods       = std::multimap< std::string, uint >; // method → number of parameters
-    // using Method        = Methods::const_iterator;
-    // using ClassMethods  = std::multimap< Identifier, Method >; // class -> method
+    using Classes = std::map< std::string, ClassScope >;
+    Classes classes_;
 
-    Identifiers variables_;     // all visible variables
-    Identifiers classNames_;    // all visible classes
-    // ClassMethods classMethods_; // class -> method
-    // Methods  methods_;      // all methods
-    Identifiers methods_;
+    bool nameIsFree( const std::string& i_name) const;
+    ClassScope& addClass( const std::string& i_name );
 
-    SymbolTable( const SymbolTable& other );
-    // boost::optional< Method > getMethod_o( const Identifier i_className, const std::string& i_methodName ) const;
-    // Method getMethod( const Identifier i_className, const std::string& i_methodName ) const;
-    // Methods getMethod( const std::string& i_name ) const
-    // {
-    //     Methods result;
-    //     std::copy_if( methods_.cbegin(), methods_.cend(), std::insert_iterator< Methods >( result, result.cend() ),
-    //             [&i_name] ( const Methods::value_type& lhs )
-    //             {
-    //                 return i_name == lhs.first;
-    //             }
-    //             );
-    //     return result;
-    // }
+    Identifiers getBlockedNames() const;
+};
 
-    boost::optional< Identifier > getClassName_o( const std::string& i_name ) const;
-    Identifier getClassName( const std::string& i_name ) const;
+struct MethodScope;
+struct ClassScope
+{
+    using Methods = std::map< std::string, MethodScope >;
 
+    const Identifiers blocked_;
+    Methods methods_;
+
+    bool nameIsFree( const std::string& i_name ) const;
+    MethodScope& addMethod( const std::string& i_name);
+
+    ClassScope( Identifiers&& i_blocked );
+
+    Identifiers getBlockedNames() const;
+};
+
+struct Scope;
+struct Scope
+{
+    using Scopes = std::list< Scope >;
+    const Identifiers inherited_;
+    const Identifiers blocked_;
+    Identifiers local_;
+    Scopes  inner_;
+
+    Scope() = default;
+    Scope( Identifiers&& i_blocked, Identifiers&& i_inherited );
     boost::optional< Identifier > getVariable_o( const std::string& i_name ) const;
     Identifier getVariable( const std::string& i_name ) const;
     Identifier addVariable( const std::string& i_name );
 
-    boost::optional< Identifier > getMethod_o( const std::string& i_name ) const;
-    Identifier addMethod( const std::string& i_name );
+    Scope& addScope();
+
+    Identifiers getBlockedNames() const;
+    Identifiers getInherited() const;
+};
+
+struct MethodScope
+{
+    const Identifiers blocked_;
+    Identifiers parameters_;
+    std::shared_ptr< Scope > local_;
+
+    MethodScope( Identifiers&& i_blocked );
+    // MethodScope( const MethodScope& other ) : blocked_{ other.blocked_}, parameters_{ other.parameters_ }, local_(  other.local_ ) { }
+
+    bool nameIsFree( const std::string& i_name ) const;
+    Identifier addParameter( const std::string& i_name );
+
+    Identifiers getBlockedNames() const;
+    Identifiers getParameters() const;
+
+    Scope& scope();
 };
 
 template < lex::rule Rule >
@@ -63,26 +91,26 @@ struct ProgramElement
 
 struct OperandDouble : ProgramElement< lex::rule::OPERAND_INT >
 {
-    using Value = boost::variant< SymbolTable::Identifier, double >;
+    using Value = boost::variant< Identifier, double >;
     Value value_;
 
-    OperandDouble( const node& i_node, const SymbolTable& i_symbolTable );
+    OperandDouble( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
 {
-    using Value = boost::variant< SymbolTable::Identifier, bool >;
+    using Value = boost::variant< Identifier, bool >;
     Value value_;
 
-    OperandBool( const node& i_node, const SymbolTable& i_symbolTable );
+    OperandBool( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
 {
-    using Value = boost::variant< SymbolTable::Identifier, std::string >;
+    using Value = boost::variant< Identifier, std::string >;
     Value value_;
 
-    OperandString( const node& i_node, const SymbolTable& i_symbolTable );
+    OperandString( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
@@ -92,7 +120,7 @@ struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
     boost::optional< Op > op_;
     boost::optional< OperandDouble >  rhs_;
 
-    ExprDouble( const node& i_node, const SymbolTable& i_symbolTable );
+    ExprDouble( const node& i_node, const Scope& i_symbolTable );
 };
 
 enum class Cmp { EQ, NE, LE, GE };
@@ -103,7 +131,7 @@ struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
     boost::optional< Cmp > cmp_;
     boost::optional< OperandBool >  rhs_;
 
-    LogicBool( const node& i_node, const SymbolTable& i_symbolTable );
+    LogicBool( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
@@ -112,7 +140,7 @@ struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
     Cmp cmp_;
     OperandDouble rhs_;
 
-    LogicDouble( const node& i_node, const SymbolTable& i_symbolTable );
+    LogicDouble( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
@@ -121,12 +149,12 @@ struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
     Cmp cmp_;
     OperandString rhs_;
 
-    LogicString( const node& i_node, const SymbolTable& i_symbolTable );
+    LogicString( const node& i_node, const Scope& i_symbolTable );
 };
 
 using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 
-using Constructor = SymbolTable::Identifier;
+using Constructor = std::string;
 struct MethodCall;
 struct Input;
 using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input, std::string >;
@@ -134,10 +162,10 @@ using Parameters = std::vector< Rightside >;
 
 struct Applicable : ProgramElement< lex::rule::APPLICABLE >
 {
-    boost::optional< SymbolTable::Identifier > object_;
+    boost::optional< Identifier > object_;
     boost::optional< Constructor > class_;
 
-    Applicable( const node& i_node, const SymbolTable& i_symbolTable );
+    Applicable( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct MethodCall : ProgramElement< lex::rule::MCALL >
@@ -146,7 +174,7 @@ struct MethodCall : ProgramElement< lex::rule::MCALL >
     std::string method_;
     Parameters params_;
 
-    MethodCall( const node& i_node, const SymbolTable& i_symbolTable );
+    MethodCall( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct Input : ProgramElement< lex::rule::INPUT >
@@ -156,8 +184,8 @@ struct Input : ProgramElement< lex::rule::INPUT >
 
 struct NewVariable : ProgramElement< lex::rule::NEW_IDENTIFIER >
 {
-    SymbolTable::Identifier this_;
-    NewVariable( const node& i_node, SymbolTable& i_symbolTable );
+    Identifier this_;
+    NewVariable( const node& i_node, Scope& i_symbolTable );
 };
 
 
@@ -165,7 +193,7 @@ struct Assignment : ProgramElement< lex::rule::ASSIGNMENT >
 {
     NewVariable lhs_;
     Rightside rhs_;
-    Assignment( const node& i_node, SymbolTable& i_symbolTable );
+    Assignment( const node& i_node, Scope& i_symbolTable );
 };
 
 struct Break : ProgramElement< lex::rule::BREAKLINE >
@@ -176,13 +204,13 @@ struct Break : ProgramElement< lex::rule::BREAKLINE >
 struct Return : ProgramElement< lex::rule::RETURNLINE >
 {
     Rightside rhs_;
-    Return( const node& i_node, const SymbolTable& i_symbolTable );
+    Return( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct Print : ProgramElement< lex::rule::PRINTLINE >
 {
     Rightside rhs_;
-    Print( const node& i_node, const SymbolTable& i_symbolTable );
+    Print( const node& i_node, const Scope& i_symbolTable );
 };
 
 struct If;
@@ -193,34 +221,43 @@ using Slines = std::vector< Sline >;
 struct If : ProgramElement< lex::rule::IFLINE >
 {
     Logic logic_;
-    SymbolTable thenTable_;
+    Scope& thenTable_;
     Slines then_;
-    SymbolTable elseTable_;
+    Scope& elseTable_;
     Slines else_;
 
-    If( const node& i_node, const SymbolTable& i_symbolTable );
+    If( const node& i_node, Scope& i_symbolTable );
 };
 
 struct While : ProgramElement< lex::rule::WHILELINE >
 {
     Logic logic_;
-    SymbolTable localTable_;
+    Scope& localTable_;
     Slines body_;
 
-    While( const node& i_node, const SymbolTable& i_symbolTable );
+    While( const node& i_node, Scope& i_symbolTable );
 };
 
-using MethodParameters = std::vector< SymbolTable::Identifier >;
+using MethodParameters = std::vector< Identifier >;
 
 struct MethodDecl : ProgramElement< lex::rule::METHOD_DECL >
 {
-    SymbolTable::Identifier name_;
-    SymbolTable local_;
+    MethodScope& methodScope_;
     MethodParameters params_;
     Slines body_;
 
-    MethodDecl( const node& i_node, SymbolTable& i_symbolTable );
+    MethodDecl( const node& i_node, ClassScope& i_symbolTable );
 };
 
 using MethodDecls = std::vector< MethodDecl >;
+
+struct ClassDecl : ProgramElement< lex::rule::CLASS_DECL >
+{
+    ClassScope& classScope_;
+    MethodDecls methods_;
+
+    ClassDecl( const node& i_node, GlobalScope& i_symbolTable );
+};
+
+using ClassDecls = std::vector< ClassDecl >;
 } // namespace sap
