@@ -171,6 +171,7 @@ Identifiers Scope::getInherited() const
 OperandDouble::OperandDouble( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     const lex value = boost::get< lex >( i_node.value_);
     if (value.type_ == lex::type::D_CONST) {
         value_ = boost::get< double >( value.value_ );
@@ -184,6 +185,7 @@ OperandDouble::OperandDouble( const node& i_node, const Scope& i_symbolTable )
 OperandBool::OperandBool( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     const lex value = boost::get< lex >( i_node.value_);
     if (value.type_ == lex::type::B_CONST) {
         value_ = boost::get< bool >( value.value_ );
@@ -197,6 +199,7 @@ OperandBool::OperandBool( const node& i_node, const Scope& i_symbolTable )
 OperandString::OperandString( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     const lex value = boost::get< lex >( i_node.value_);
     if (value.type_ == lex::type::S_CONST) {
         value_ = boost::get< std::string >( value.value_ );
@@ -209,6 +212,7 @@ OperandString::OperandString( const node& i_node, const Scope& i_symbolTable )
 //
 ExprDouble::Op parseOp( const node& op_node )
 {
+    DBG( '!' );
     ProgramElement< lex::rule::OPERATOR_INT > assertion{ op_node };
 
     const lex op_lexeme = boost::get< lex >( op_node.value_ );
@@ -236,6 +240,7 @@ ExprDouble::ExprDouble( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
     , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
 {
+    DBG( '!' );
     const auto& nodes = boost::get< node::nodes >( i_node.value_ );
 
     if (nodes.size() == 3) {
@@ -251,6 +256,7 @@ ExprDouble::ExprDouble( const node& i_node, const Scope& i_symbolTable )
 
 Cmp parseCmp( const node& i_node )
 {
+    DBG( '!' );
     assert( (lex::rule::COMPARATOR_EQ == i_node.rule_) || (lex::rule::COMPARATOR_INT == i_node.rule_ ));
 
     const bool HAS_ORDER = lex::rule::COMPARATOR_INT == i_node.rule_;
@@ -283,6 +289,7 @@ LogicBool::LogicBool( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
     , lhs_{ boost::get< node::nodes >( i_node.value_ ).at( 0 ), i_symbolTable }
 {
+    DBG( '!' );
     const auto& nodes = boost::get< node::nodes >( i_node.value_ );
 
     if (nodes.size() == 3) {
@@ -300,6 +307,7 @@ LogicDouble::LogicDouble( const node& i_node, const Scope& i_symbolTable )
     , cmp_{ parseCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
     , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
 {
+    DBG( '!' );
     if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
         throw std::logic_error{ "Wrong number of lexemes in expression!" };
     }
@@ -311,6 +319,7 @@ LogicString::LogicString( const node& i_node, const Scope& i_symbolTable )
     , cmp_{ parseCmp( boost::get< node::nodes >( i_node.value_ ).at( 1 ) ) }
     , rhs_{ boost::get< node::nodes >( i_node.value_ ).at( 2 ), i_symbolTable }
 {
+    DBG( '!' );
     if ( boost::get< node::nodes >( i_node.value_ ).size() != 3) {
         throw std::logic_error{ "Wrong number of lexemes in expression!" };
     }
@@ -318,6 +327,7 @@ LogicString::LogicString( const node& i_node, const Scope& i_symbolTable )
 
 Logic parseLogic( const node& i_node, const Scope& i_symbolTable )
 {
+    DBG( '!' );
     ProgramElement< lex::rule::LOGIC > assertion{ i_node };
 
     const auto& nodes = boost::get< node::nodes >( i_node.value_ );
@@ -341,6 +351,7 @@ Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable );
 
 Rightside parseRightside( const node& i_node, const Scope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
 
     if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
@@ -364,13 +375,14 @@ Rightside parseRightside( const node& i_node, const Scope& i_symbolTable )
                 assert( !"Wrong child node!" );
         }
     } else {
-        return boost::get< std::string >( i_node.value_ );
+        return boost::get< std::string >( boost::get< lex >( i_node.value_ ).value_ );
     }
 }
 
 Parameters parseParameters( const node& i_node, const Scope& i_symbolTable )
 {
-    const ProgramElement< lex::rule::RIGHTSIDE > assertion{ i_node };
+    DBG( '!' );
+    const ProgramElement< lex::rule::PARAMS > assertion{ i_node };
 
     Parameters result;
 
@@ -382,6 +394,13 @@ Parameters parseParameters( const node& i_node, const Scope& i_symbolTable )
 
         const ProgramElement< lex::rule::PARAM_LIST > assertion{ (*nodes)[1] };
         pnode = &(*nodes)[1];
+        // if (const auto subnodes = boost::get< node::nodes >( &pnode->value_)) {
+        //     assert( subnodes->size() == 1);
+        //     pnode = &(*subnodes)[ 0 ];
+        //     const ProgramElement< lex::rule::PARAMS > assertion( *pnode );
+        // } else {
+        //     break;
+        // }
     }
 
     assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
@@ -391,6 +410,7 @@ Parameters parseParameters( const node& i_node, const Scope& i_symbolTable )
 
 Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::FCALL > assertion{ i_node };
 
     const auto& children = boost::get< node::nodes >( i_node.value_ );
@@ -412,6 +432,7 @@ Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable )
 Applicable::Applicable( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
         // it's a constructor
         assert( 1 == nodes->size() );
@@ -428,6 +449,7 @@ MethodCall::MethodCall( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
     , lhs_{ boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable }
 {
+    DBG( '!' );
     const auto& nodes = boost::get< node::nodes >( i_node.value_ );
     assert( 2 == nodes.size() );
     const auto& fnode = nodes[ 1 ];
@@ -452,12 +474,14 @@ MethodCall::MethodCall( const node& i_node, const Scope& i_symbolTable )
 Input::Input( const node& i_node )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     assert( lex::type::EPS == boost::get< lex >( i_node.value_ ).type_ );
 }
 
 NewVariable::NewVariable( const node& i_node, Scope& i_symbolTable )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     const auto& child = boost::get< lex >( i_node.value_ );
     assert( lex::type::IDENTIFIER == child.type_ );
     const auto name = boost::get< std::string >( child.value_ );
@@ -470,11 +494,13 @@ Assignment::Assignment( const node& i_node, Scope& i_symbolTable )
     , lhs_{ boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable }
     , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 1 ], i_symbolTable ) }
 {
+    DBG( '!' );
 }
 
 Break::Break( const node& i_node )
     : ProgramElement{ i_node }
 {
+    DBG( '!' );
     assert( boost::get< lex >( i_node.value_ ).type_ == lex::type::EPS );
 }
 
@@ -482,16 +508,19 @@ Return::Return( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
     , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
 {
+    DBG( '!' );
 }
 
 Print::Print( const node& i_node, const Scope& i_symbolTable )
     : ProgramElement{ i_node }
     , rhs_{ parseRightside( boost::get< node::nodes >( i_node.value_ )[ 0 ], i_symbolTable ) }
 {
+    DBG( '!' );
 }
 
 Scope& Scope::addScope()
 {
+    DBG( '!' );
     inner_.emplace_back(  getBlockedNames(), getInherited() );
 
     return  *std::prev( inner_.end() );
@@ -499,6 +528,7 @@ Scope& Scope::addScope()
 
 Sline parseSline( const node& i_node, Scope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::SLINE > assertion{ i_node };
 
     const auto nodes = boost::get< node::nodes >( i_node.value_ );
@@ -528,7 +558,8 @@ Sline parseSline( const node& i_node, Scope& i_symbolTable )
 
 Slines parseSlines( const node& i_node, Scope& i_symbolTable )
 {
-    const ProgramElement< lex::rule::SLINE > assertion{ i_node };
+    DBG( '!' );
+    const ProgramElement< lex::rule::SLINES > assertion{ i_node };
 
     Slines result;
 
@@ -540,6 +571,13 @@ Slines parseSlines( const node& i_node, Scope& i_symbolTable )
 
         const ProgramElement< lex::rule::SLINE_LIST > assertion{ (*nodes)[1] };
         pnode = &(*nodes)[1];
+        if (const auto subnodes = boost::get< node::nodes >( &pnode->value_)) {
+            assert( subnodes->size() == 1);
+            pnode = &(*subnodes)[ 0 ];
+            const ProgramElement< lex::rule::SLINES > assertion( *pnode );
+        } else {
+            break;
+        }
     }
 
     assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
@@ -549,6 +587,7 @@ Slines parseSlines( const node& i_node, Scope& i_symbolTable )
 
 Slines parseElse( const node& i_node, Scope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::ELSELINE > assertion{ i_node };
 
     if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
@@ -569,6 +608,7 @@ If::If( const node& i_node, Scope& i_symbolTable )
     , elseTable_( i_symbolTable.addScope() )
     , else_( parseElse( boost::get< node::nodes >( i_node.value_ )[ 2 ], elseTable_ ) )
 {
+    DBG( '!' );
 }
 
 While::While( const node& i_node, Scope& i_symbolTable )
@@ -577,10 +617,12 @@ While::While( const node& i_node, Scope& i_symbolTable )
     , localTable_( i_symbolTable.addScope() )
     , body_( parseSlines( boost::get< node::nodes >( i_node.value_ )[ 1 ], localTable_ ) )
 {
+    DBG( '!' );
 }
 
 Identifier parseMethodParameter( const node& i_node, MethodScope& i_symbolTable )
 {
+    DBG( '!' );
     ProgramElement< lex::rule::NEW_IDENTIFIER > assertion{ i_node };
 
     const auto lexeme = boost::get< lex >( i_node.value_);
@@ -593,18 +635,28 @@ Identifier parseMethodParameter( const node& i_node, MethodScope& i_symbolTable 
 
 MethodParameters parseMethodParameters( const node& i_node, MethodScope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::MPARAMS > assertion{ i_node };
 
     MethodParameters result;
 
     const node* pnode = &i_node;
     while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        DEBUG( nodes->size()  );
         assert( 2 == nodes->size() );
 
         result.emplace_back( parseMethodParameter( (*nodes)[ 0 ], i_symbolTable ) );
 
         const ProgramElement< lex::rule::MPARAM_LIST > assertion{ (*nodes)[1] };
+
         pnode = &(*nodes)[1];
+        if (const auto subnodes = boost::get< node::nodes >( &pnode->value_)) {
+            assert( subnodes->size() == 1);
+            pnode = &(*subnodes)[ 0 ];
+            const ProgramElement< lex::rule::MPARAMS > assertion( *pnode );
+        } else {
+            break;
+        }
     }
 
     assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
@@ -615,14 +667,20 @@ MethodParameters parseMethodParameters( const node& i_node, MethodScope& i_symbo
 MethodDecl::MethodDecl( const node& i_node, ClassScope& i_symbolTable )
     : ProgramElement{ i_node }
     , methodScope_( i_symbolTable.addMethod( boost::get< std::string >(
-                                boost::get< node::nodes >( i_node.value_)[ 0 ].value_)) )
+                    boost::get< lex >(
+                        boost::get< node::nodes >(
+                            i_node.value_
+                        )[ 0 ].value_
+                    ).value_) ) )
     , params_( parseMethodParameters( boost::get< node::nodes >( i_node.value_)[ 1 ], methodScope_) )
     , body_( parseSlines( boost::get< node::nodes >( i_node.value_)[ 2 ], methodScope_.scope()))
 {
+    DBG( '!' );
 }
 
 MethodDecls parseMethodDecls( const node& i_node, ClassScope& i_symbolTable )
 {
+    DBG( '!' );
     const ProgramElement< lex::rule::METHODS > assertion{ i_node };
 
     MethodDecls result;
@@ -634,7 +692,15 @@ MethodDecls parseMethodDecls( const node& i_node, ClassScope& i_symbolTable )
         result.emplace_back( (*nodes)[ 0 ], i_symbolTable );
 
         const ProgramElement< lex::rule::METHOD_LIST > assertion{ (*nodes)[1] };
+
         pnode = &(*nodes)[1];
+        if (const auto subnodes = boost::get< node::nodes >( &pnode->value_)) {
+            assert( subnodes->size() == 1);
+            pnode = &(*subnodes)[ 0 ];
+            const ProgramElement< lex::rule::METHODS > assertion( *pnode );
+        } else {
+            break;
+        }
     }
 
     assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
@@ -645,8 +711,122 @@ MethodDecls parseMethodDecls( const node& i_node, ClassScope& i_symbolTable )
 ClassDecl::ClassDecl( const node& i_node, GlobalScope& i_scope )
     : ProgramElement{ i_node }
     , classScope_( i_scope.addClass( boost::get< std::string >(
-                        boost::get< node::nodes >( i_node.value_ )[ 0 ].value_ ) ) )
+                    boost::get< lex > (
+                        boost::get< node::nodes >(
+                            i_node.value_
+                        )[ 0 ].value_
+                    ).value_ ) ) )
     , methods_{ parseMethodDecls( boost::get< node::nodes >( i_node.value_)[1], classScope_) }
 {
+    DBG( '!' );
+}
+
+ClassDecls parseClassDecls( const node& i_node, GlobalScope& i_scope )
+{
+    DBG( '!' );
+    const ProgramElement< lex::rule::CLASSES > assertion{ i_node };
+
+    ClassDecls result;
+
+    const node* pnode = &i_node;
+    while (const auto* nodes = boost::get< node::nodes >( &pnode->value_)) {
+        assert( 2 == nodes->size() );
+
+        result.emplace_back( (*nodes)[ 0 ], i_scope );
+
+        const ProgramElement< lex::rule::CLASS_LIST > assertion{ (*nodes)[1] };
+        pnode = &(*nodes)[1];
+        if (const auto subnodes = boost::get< node::nodes >( &pnode->value_)) {
+            assert( subnodes->size() == 1);
+            pnode = &(*subnodes)[ 0 ];
+            const ProgramElement< lex::rule::CLASSES > assertion( *pnode );
+        } else {
+            break;
+        }
+    }
+
+    assert( lex::type::EPS == boost::get< lex >( pnode->value_ ).type_ );
+
+    return result;
+}
+
+Program::Program( const node& i_node )
+    : ProgramElement{ i_node }
+    , scope_{}
+    , classes_{ parseClassDecls( boost::get< node::nodes >( i_node.value_ )[ 0 ], scope_ ) }
+    , run_{ boost::get< node::nodes >( i_node.value_ )[ 1 ], Scope{} }
+{
+    DBG( '!' );
+}
+
+std::ostream& operator<<( std::ostream& out, const GlobalScope& scope )
+{
+    for (const auto& p : scope.classes_) {
+        out << "Class[[[ " << p.first << '\n';
+        out << p.second;
+        out << "Class]]] " << p.first << '\n';
+    }
+    return out;
+}
+std::ostream& operator<<( std::ostream& out, const ClassScope& scope )
+{
+    for (const auto& p : scope.methods_) {
+        out << "\tMethod[[[ " << p.first << '\n';
+        out << p.second;
+        out << "\tMethod]]] " << p.first << '\n';
+    }
+    return out;
+}
+std::ostream& operator<<( std::ostream& out, const MethodScope& scope )
+{
+    out << "\t\tParameters: ";
+    for (const auto& p : scope.parameters_ )
+        out << p << "  ";
+    out << '\n';
+    out << *scope.local_;
+
+    return out;
+}
+class ScopePrinter
+{
+public:
+    void print( const Scope& root )
+    {
+        p_printLevel();
+
+        out_ << "Local variables: ";
+        for (const auto& p : root.local_ )
+            out_ << p << "  ";
+        out_ << '\n';
+
+        for (const auto& p : root.inner_ ) {
+            p_printLevel();
+            out_ << "Inner block[[[ \n";
+            ++level_;
+            print( p );
+            --level_;
+            p_printLevel();
+            out_ << "Inner block]]] \n";
+        }
+    }
+
+    ScopePrinter( std::ostream& i_out ) : out_( i_out ) { }
+private:
+    uint level_ = 2;
+    std::ostream& out_;
+
+    void p_printLevel() const
+    {
+        for (uint i = 0; level_ != i; ++i) {
+            out_ << "\t";
+        }
+    }
+};
+
+std::ostream& operator<<( std::ostream& out, const Scope& scope )
+{
+    ScopePrinter{ out }.print( scope );
+
+    return out;
 }
 } // namespace sap

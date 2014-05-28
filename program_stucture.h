@@ -5,6 +5,10 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <iosfwd>
+#ifndef NDEBUG
+    #include <iostream>
+#endif
 
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
@@ -25,6 +29,8 @@ struct GlobalScope
     Identifiers getBlockedNames() const;
 };
 
+std::ostream& operator<<( std::ostream& out, const GlobalScope& scope );
+
 struct MethodScope;
 struct ClassScope
 {
@@ -40,6 +46,7 @@ struct ClassScope
 
     Identifiers getBlockedNames() const;
 };
+std::ostream& operator<<( std::ostream& out, const ClassScope& scope );
 
 struct Scope;
 struct Scope
@@ -61,6 +68,7 @@ struct Scope
     Identifiers getBlockedNames() const;
     Identifiers getInherited() const;
 };
+std::ostream& operator<<( std::ostream& out, const Scope& scope );
 
 struct MethodScope
 {
@@ -79,12 +87,17 @@ struct MethodScope
 
     Scope& scope();
 };
+std::ostream& operator<<( std::ostream& out, const MethodScope& scope );
 
 template < lex::rule Rule >
 struct ProgramElement
 {
     ProgramElement( const node& i_node )
     {
+        #ifndef NDEBUG
+            std::cout << "Parsing node with " << Rule << ';'
+                    << "Actual " << i_node.rule_ << '\n';
+        #endif
         assert( Rule == i_node.rule_ );
     }
 };
@@ -260,4 +273,13 @@ struct ClassDecl : ProgramElement< lex::rule::CLASS_DECL >
 };
 
 using ClassDecls = std::vector< ClassDecl >;
+
+struct Program : ProgramElement< lex::rule::START >
+{
+    GlobalScope scope_;
+    ClassDecls classes_;
+    MethodCall run_;
+
+    Program( const node& i_node );
+};
 } // namespace sap

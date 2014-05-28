@@ -5,6 +5,7 @@
 #include "lexeme.h"
 #include "syntax.h"
 #include "program_tree.h"
+#include "program_stucture.h"
 
 #include <fstream>
 #include <streambuf>
@@ -40,6 +41,10 @@ int main( int argc, char* argv[] )
             sap::LIterator it = lexems.begin();
             sap::node node{ queue, it };
             std::cout << node << std::endl;
+
+            sap::Program program{ node };
+            std::cout << program.scope_;
+
 
             // std::cout << "Rule application sequence:\n";
             // std::cout << queue.front();
