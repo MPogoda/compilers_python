@@ -19,11 +19,13 @@ struct Triad;
 
 struct ProgramCode
 {
-    using set = std::set< Triad >;
+    using Set = std::set< Triad >;
+    using Line = Set::iterator;
 
-    set code_;
-    uint addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
+    Set code_;
+    Line addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
     static ProgramCode& instance();
+    uint size() const;
 private:
     ProgramCode() = default;
     ProgramCode( const ProgramCode& ) = delete;
@@ -38,8 +40,8 @@ struct Triad
 
     const uint no_;
     std::string op_;
-    std::string lhs_;
-    std::string rhs_;
+    mutable std::string lhs_;
+    mutable std::string rhs_;
 
     Triad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs );
 };
@@ -254,23 +256,27 @@ struct Assignment : ProgramElement< lex::rule::ASSIGNMENT >
     NewVariable lhs_;
     Rightside rhs_;
     Assignment( const node& i_node, Scope& i_symbolTable );
+    void operator()() const;
 };
 
 struct Break : ProgramElement< lex::rule::BREAKLINE >
 {
     Break( const node& i_node );
+    void operator()() const;
 };
 
 struct Return : ProgramElement< lex::rule::RETURNLINE >
 {
     Rightside rhs_;
     Return( const node& i_node, const Scope& i_symbolTable );
+    void operator()() const;
 };
 
 struct Print : ProgramElement< lex::rule::PRINTLINE >
 {
     Rightside rhs_;
     Print( const node& i_node, const Scope& i_symbolTable );
+    void operator()() const;
 };
 
 struct If;
@@ -287,6 +293,7 @@ struct If : ProgramElement< lex::rule::IFLINE >
     Slines else_;
 
     If( const node& i_node, Scope& i_symbolTable );
+    void operator()() const;
 };
 
 struct While : ProgramElement< lex::rule::WHILELINE >
@@ -296,6 +303,7 @@ struct While : ProgramElement< lex::rule::WHILELINE >
     Slines body_;
 
     While( const node& i_node, Scope& i_symbolTable );
+    void operator()() const;
 };
 
 using MethodParameters = std::vector< Identifier >;

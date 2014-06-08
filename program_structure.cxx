@@ -843,7 +843,7 @@ Triad::Triad( const std::string& i_op, const std::string& i_lhs, const std::stri
 {
 }
 
-bool operator<( const Triad& lhs, const Triad& rhs_ )
+bool operator<( const Triad& lhs, const Triad& rhs )
 {
     return lhs.no_ < rhs.no_;
 }
@@ -855,44 +855,55 @@ ProgramCode& ProgramCode::instance()
     return INSTANCE;
 }
 
-uint ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
+ProgramCode::Line
+ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
 {
     const auto result = code_.emplace( i_op, i_lhs, i_rhs );
 
     if (!result.second)
         throw std::logic_error{ "Cannot add element to set!" };
 
-    return result.first->no_;
+    return result.first;
+}
+
+uint ProgramCode::size() const
+{
+    return code_.size();
+}
+
+uint addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "")
+{
+    return ProgramCode::instance().addTriad( i_op, i_lhs, i_rhs )->no_;
 }
 
 uint OperandDouble::operator()() const
 {
     if (const auto id = boost::get< Identifier >( &value_ )) {
-        return ProgramCode::instance().addTriad( "LOAD", **id );
+        return addTriad( "LOAD", **id );
     } else {
         std::stringstream ss;
         ss << boost::get< double >( value_ );
-        return ProgramCode::instance().addTriad( "GET", ss.str() );
+        return addTriad( "GET", ss.str() );
     }
 }
 
 uint OperandBool::operator()() const
 {
     if (const auto id = boost::get< Identifier >( &value_ )) {
-        return ProgramCode::instance().addTriad( "LOAD", **id );
+        return addTriad( "LOAD", **id );
     } else {
         std::stringstream ss;
         ss << (boost::get< bool >( value_ ) ? "true" : "false");
-        return ProgramCode::instance().addTriad( "GET", ss.str() );
+        return addTriad( "GET", ss.str() );
     }
 }
 
 uint OperandString::operator()() const
 {
     if (const auto id = boost::get< Identifier >( &value_ )) {
-        return ProgramCode::instance().addTriad( "LOAD", **id );
+        return addTriad( "LOAD", **id );
     } else {
-        return ProgramCode::instance().addTriad( "GET", boost::get< std::string >( value_ ) );
+        return addTriad( "GET", boost::get< std::string >( value_ ) );
     }
 }
 
@@ -922,7 +933,7 @@ uint ExprDouble::operator()() const
 
     const auto rhs = rhs_.get()();
 
-    return ProgramCode::instance().addTriad( getOp( op_.get() ), createLink( lhs ), createLink( rhs ) );
+    return addTriad( getOp( op_.get() ), createLink( lhs ), createLink( rhs ) );
 }
 
 std::string getCmp( Cmp i_cmp )
@@ -943,7 +954,7 @@ uint LogicBool::operator()() const
 
     const auto rhs = rhs_.get()();
 
-    return ProgramCode::instance().addTriad( getCmp( cmp_.get() ), createLink( lhs ), createLink( rhs ) );
+    return addTriad( getCmp( cmp_.get() ), createLink( lhs ), createLink( rhs ) );
 }
 
 uint LogicDouble::operator()() const
@@ -951,7 +962,7 @@ uint LogicDouble::operator()() const
     const auto lhs = lhs_();
     const auto rhs = rhs_();
 
-    return ProgramCode::instance().addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
+    return addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
 }
 
 uint LogicString::operator()() const
@@ -959,7 +970,7 @@ uint LogicString::operator()() const
     const auto lhs = lhs_();
     const auto rhs = rhs_();
 
-    return ProgramCode::instance().addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
+    return addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
 }
 
 uint getLogic( const Logic& logic )
@@ -979,7 +990,7 @@ uint getLogic( const Logic& logic )
 
 uint Constructor::operator()() const
 {
-    return ProgramCode::instance().addTriad( "CREATE", name_ );
+    return addTriad( "CREATE", name_ );
 }
 
 uint getRightside( const Rightside& rhs )
@@ -997,13 +1008,12 @@ uint getRightside( const Rightside& rhs )
         return (*d)();
     }
     if (const auto d = boost::get< MethodCall >( &rhs )) {
-        return (*d)();
-    }
+        return (*d)(); }
     if (const auto d = boost::get< Input >( &rhs )) {
         return (*d)();
     }
     if (const auto d = boost::get< std::string >( &rhs )) {
-        return ProgramCode::instance().addTriad( "GET", *d );
+        return addTriad( "GET", *d );
     }
 
     assert( !"Cannot generate code for RIGHTSIDE element!" );
@@ -1012,7 +1022,7 @@ uint getRightside( const Rightside& rhs )
 uint Applicable::operator()() const
 {
     if (object_) {
-        return ProgramCode::instance().addTriad( "LOAD", **object_ );
+        return addTriad( "LOAD", **object_ );
     }
     if (class_) {
         return (*class_)();
@@ -1024,7 +1034,7 @@ uint Applicable::operator()() const
 void getParameters( const Parameters& i_params )
 {
     for (const auto& p : i_params ) {
-        ProgramCode::instance().addTriad( "PUSH", createLink( getRightside( p ) ) );
+        addTriad( "PUSH", createLink( getRightside( p ) ) );
     }
 }
 
@@ -1032,14 +1042,92 @@ uint MethodCall::operator()() const
 {
     const auto lhs = lhs_();
     getParameters( params_ );
-    ProgramCode::instance().addTriad( "CALL", createLink( lhs ), method_ );
+    addTriad( "CALL", createLink( lhs ), method_ );
 
-    return ProgramCode::instance().addTriad( "POP" );
+    return addTriad( "POP" );
 }
 
 uint Input::operator()() const
 {
-    ProgramCode::instance().addTriad( "CALL", "SYSTEM", "READ" );
-    return ProgramCode::instance().addTriad( "POP" );
+    addTriad( "CALL", "SYSTEM", "READ" );
+    return addTriad( "POP" );
+}
+
+void Assignment::operator()() const
+{
+    const auto rhs = getRightside( rhs_ );
+    addTriad( "STORE", createLink( rhs ), *lhs_.this_ );
+}
+
+void Break::operator()() const
+{
+    addTriad( "BREAK" );
+}
+
+void Return::operator()() const
+{
+    addTriad( "PUSH", createLink( getRightside( rhs_ ) ) );
+    addTriad( "RETURN" );
+}
+
+void Print::operator()() const
+{
+    addTriad( "PUSH", createLink( getRightside( rhs_ ) ) );
+    addTriad( "CALL", "SYSTEM", "WRITE" );
+}
+
+void getSline( const Sline& sline )
+{
+    if (const auto d = boost::get< Assignment >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< MethodCall >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< Break >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< Return >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< Print >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< If >( &sline )) {
+        (*d)();
+    }
+    if (const auto d = boost::get< While >( &sline )) {
+        (*d)();
+    }
+
+    assert( !"Cannot generate code for Sline element!" );
+}
+
+void getSlines( const Slines& slines )
+{
+    for (const auto& p : slines ) {
+        getSline( p );
+    }
+}
+
+void If::operator()() const
+{
+    const auto logic = getLogic( logic_ );
+    auto thenAddr = ProgramCode::instance().addTriad( "JNE", createLink( logic ) );
+    getSlines( then_ );
+    auto elseAddr = ProgramCode::instance().addTriad( "JMP" );
+    getSlines( else_ );
+    thenAddr->rhs_ = createLink( elseAddr->no_ + 1 );
+    elseAddr->lhs_ = createLink( ProgramCode::instance().size() + 1 );
+}
+
+void While::operator()() const
+{
+    const auto logicAddr = ProgramCode::instance().size() + 1;
+    const auto logic = getLogic( logic_ );
+    auto bodyAddr = ProgramCode::instance().addTriad( "JNE", createLink( logic ) );
+    getSlines( body_ );
+    const auto loopAddr = addTriad( "JMP", createLink( logicAddr ) );
+    bodyAddr->rhs_ = createLink( loopAddr + 1 );
 }
 } // namespace sap
