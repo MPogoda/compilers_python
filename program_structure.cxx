@@ -347,8 +347,6 @@ Logic parseLogic( const node& i_node, const Scope& i_symbolTable )
     }
 }
 
-Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable );
-
 Rightside parseRightside( const node& i_node, const Scope& i_symbolTable )
 {
     DBG( '!' );
@@ -364,7 +362,7 @@ Rightside parseRightside( const node& i_node, const Scope& i_symbolTable )
             case lex::rule::EXPR_INT:
                 return ExprDouble{ child, i_symbolTable };
             case lex::rule::FCALL:
-                return parseConstructor( child, i_symbolTable );
+                return Constructor( child, i_symbolTable );
             case lex::rule::MCALL:
                 return MethodCall{ child, i_symbolTable };
             case lex::rule::INPUT:
@@ -408,16 +406,16 @@ Parameters parseParameters( const node& i_node, const Scope& i_symbolTable )
     return result;
 }
 
-Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable )
+Constructor::Constructor( const node& i_node, const Scope& i_scope )
+    : ProgramElement{ i_node }
 {
     DBG( '!' );
-    const ProgramElement< lex::rule::FCALL > assertion{ i_node };
 
     const auto& children = boost::get< node::nodes >( i_node.value_ );
     assert( 2 == children.size() );
 
     {
-        assert( parseParameters( children[ 1 ], i_symbolTable ).size() == 0 );
+        assert( parseParameters( children[ 1 ], i_scope ).size() == 0 );
     }
 
     {
@@ -425,7 +423,7 @@ Constructor parseConstructor( const node& i_node, const Scope& i_symbolTable )
         const ProgramElement< lex::rule::NEW_IDENTIFIER > assertion{ id_node };
 
         const auto& lexeme = boost::get< lex >( id_node.value_ );
-        return boost::get< std::string >( lexeme.value_ );
+        name_ = boost::get< std::string >( lexeme.value_ );
     }
 }
 
@@ -436,7 +434,7 @@ Applicable::Applicable( const node& i_node, const Scope& i_symbolTable )
     if (const auto nodes = boost::get< node::nodes >( &i_node.value_ )) {
         // it's a constructor
         assert( 1 == nodes->size() );
-        class_ = parseConstructor( (*nodes)[ 0 ], i_symbolTable );
+        class_ = Constructor( (*nodes)[ 0 ], i_symbolTable );
     } else {
         const lex id = boost::get< lex >( i_node.value_ );
         assert( lex::type::IDENTIFIER == id.type_ );
@@ -845,6 +843,11 @@ Triad::Triad( const std::string& i_op, const std::string& i_lhs, const std::stri
 {
 }
 
+bool operator<( const Triad& lhs, const Triad& rhs_ )
+{
+    return lhs.no_ < rhs.no_;
+}
+
 ProgramCode& ProgramCode::instance()
 {
     static ProgramCode INSTANCE;
@@ -972,5 +975,71 @@ uint getLogic( const Logic& logic )
     }
 
     assert( !"Cannot generate code for LOGIC element!" );
+}
+
+uint Constructor::operator()() const
+{
+    return ProgramCode::instance().addTriad( "CREATE", name_ );
+}
+
+uint getRightside( const Rightside& rhs )
+{
+    if (const auto d = boost::get< Logic >( &rhs )) {
+        return getLogic( *d );
+    if (const auto d = boost::get< Input >( &rhs )) {
+        return (*d)();
+    }
+    }
+    if (const auto d = boost::get< ExprDouble >( &rhs )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< Constructor >( &rhs )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< MethodCall >( &rhs )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< Input >( &rhs )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< std::string >( &rhs )) {
+        return ProgramCode::instance().addTriad( "GET", *d );
+    }
+
+    assert( !"Cannot generate code for RIGHTSIDE element!" );
+}
+
+uint Applicable::operator()() const
+{
+    if (object_) {
+        return ProgramCode::instance().addTriad( "LOAD", **object_ );
+    }
+    if (class_) {
+        return (*class_)();
+    }
+
+    assert( !"Cannot generate code for APPLICABLE!" );
+}
+
+void getParameters( const Parameters& i_params )
+{
+    for (const auto& p : i_params ) {
+        ProgramCode::instance().addTriad( "PUSH", createLink( getRightside( p ) ) );
+    }
+}
+
+uint MethodCall::operator()() const
+{
+    const auto lhs = lhs_();
+    getParameters( params_ );
+    ProgramCode::instance().addTriad( "CALL", createLink( lhs ), method_ );
+
+    return ProgramCode::instance().addTriad( "POP" );
+}
+
+uint Input::operator()() const
+{
+    ProgramCode::instance().addTriad( "CALL", "SYSTEM", "READ" );
+    return ProgramCode::instance().addTriad( "POP" );
 }
 } // namespace sap

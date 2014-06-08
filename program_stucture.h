@@ -44,6 +44,8 @@ struct Triad
     Triad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs );
 };
 
+bool operator<( const Triad& lhs, const Triad& rhs_ );
+
 struct ClassScope;
 using Identifiers   = std::list< std::string >;
 using Identifier    = Identifiers::const_iterator;
@@ -203,7 +205,13 @@ struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
 
 using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;
 
-using Constructor = std::string;
+struct Constructor : private ProgramElement< lex::rule::FCALL >
+{
+    std::string name_;
+    Constructor( const node& i_node, const Scope& i_scope );
+    uint operator()() const;
+};
+
 struct MethodCall;
 struct Input;
 using Rightside = boost::variant< Logic, ExprDouble, Constructor, MethodCall, Input, std::string >;
@@ -215,6 +223,7 @@ struct Applicable : ProgramElement< lex::rule::APPLICABLE >
     boost::optional< Constructor > class_;
 
     Applicable( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct MethodCall : ProgramElement< lex::rule::MCALL >
@@ -224,11 +233,13 @@ struct MethodCall : ProgramElement< lex::rule::MCALL >
     Parameters params_;
 
     MethodCall( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct Input : ProgramElement< lex::rule::INPUT >
 {
     Input( const node& i_node );
+    uint operator()() const;
 };
 
 struct NewVariable : ProgramElement< lex::rule::NEW_IDENTIFIER >
