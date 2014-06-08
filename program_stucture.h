@@ -178,6 +178,7 @@ struct LogicBool : ProgramElement< lex::rule::LOGIC_BOOL >
     boost::optional< OperandBool >  rhs_;
 
     LogicBool( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
@@ -187,6 +188,7 @@ struct LogicDouble : ProgramElement< lex::rule::LOGIC_INT >
     OperandDouble rhs_;
 
     LogicDouble( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
@@ -196,6 +198,7 @@ struct LogicString : ProgramElement< lex::rule::LOGIC_STR >
     OperandString rhs_;
 
     LogicString( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 using Logic = boost::variant< LogicBool, LogicDouble, LogicString >;

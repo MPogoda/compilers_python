@@ -921,4 +921,56 @@ uint ExprDouble::operator()() const
 
     return ProgramCode::instance().addTriad( getOp( op_.get() ), createLink( lhs ), createLink( rhs ) );
 }
+
+std::string getCmp( Cmp i_cmp )
+{
+    switch (i_cmp) {
+        case Cmp::EQ: return "==";
+        case Cmp::NE: return "!=";
+        case Cmp::LE: return "<";
+        case Cmp::GE: return ">";
+        default: assert( !"No such OP!" );
+    }
+}
+
+uint LogicBool::operator()() const
+{
+    const auto lhs = lhs_();
+    if ( !(cmp_ || rhs_) ) return lhs;
+
+    const auto rhs = rhs_.get()();
+
+    return ProgramCode::instance().addTriad( getCmp( cmp_.get() ), createLink( lhs ), createLink( rhs ) );
+}
+
+uint LogicDouble::operator()() const
+{
+    const auto lhs = lhs_();
+    const auto rhs = rhs_();
+
+    return ProgramCode::instance().addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
+}
+
+uint LogicString::operator()() const
+{
+    const auto lhs = lhs_();
+    const auto rhs = rhs_();
+
+    return ProgramCode::instance().addTriad( getCmp( cmp_ ), createLink( lhs ), createLink( rhs ) );
+}
+
+uint getLogic( const Logic& logic )
+{
+    if (const auto d = boost::get< LogicBool >( &logic )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< LogicString >( &logic )) {
+        return (*d)();
+    }
+    if (const auto d = boost::get< LogicString >( &logic )) {
+        return (*d)();
+    }
+
+    assert( !"Cannot generate code for LOGIC element!" );
+}
 } // namespace sap
