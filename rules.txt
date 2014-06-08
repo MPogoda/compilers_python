@@ -1,9 +1,9 @@
 01. {applicable} → {fcall}
 02. {applicable} → {identifier}
 
-04. {assignment} → {identifier} = {rightside}
+04. {assignment} → {new_identifier} = {rightside} {newline}
 
-05. {class-decl} → class {identifier}:{newline} {indent} {methods} {dedent}
+05. {class-decl} → class {new_identifier}:{newline} {indent} {methods} {dedent}
 
 06. {class-list} → {classes}
 07. {class-list} → {eps}
@@ -24,7 +24,7 @@
 17. {expr-int} → {operand-int}
 18. {expr-int} → {operand-int} {operator-int} {operand-int}
 
-19. {fcall} → {identifier} ( {params} )
+19. {fcall} → {new_identifier} ( {params} )
 
 20. {ifline} → if {logic} : {newline} {indent} {slines} {dedent} {elseline}
 
@@ -41,16 +41,16 @@
 27. {logic} → {logic-int}
 28. {logic} → {logic-str}
 
-29. {mcall} → {applicable} . {fcall}
+29. {mcall} → {applicable} . {fcall} {newline}
 
-30. {method-decl} → def {identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}
+30. {method-decl} → def {new_identifier} ( {mparams} ): {newline} {indent} {slines} {dedent}
 
 31. {method-list} → {eps}
 32. {method-list} → {methods}
 
 33. {methods} → {method-decl} {method-list}
 
-34. {mparams} → {identifier} {mparam-list}
+34. {mparams} → {new_identifier} {mparam-list}
 
 35. {mparam-list} → , {mparams}
 36. {mparam-list} → {eps}
@@ -77,7 +77,7 @@
 52. {rightside} → {input}
 53. {rightside} → {logic}
 54. {rightside} → {mcall}
-99. {rightside} → {fcall}
+68. {rightside} → {fcall}
 55. {rightside} → {str-const}
 
 56. {sline-list} → {eps}
@@ -85,10 +85,10 @@
 
 58. {slines} → {sline} {sline-list}
 
-59. {sline} → break {newline}
-60. {sline} → return {rightside} {newline}
-61. {sline} → print ( {rightside} ) {newline}
-62. {sline} → {assignment} {newline}
+59. {sline} → {breakline}
+60. {sline} → {returnline}
+61. {sline} → {printline}
+62. {sline} → {assignment}
 63. {sline} → {ifline}
 64. {sline} → {mcall} {newline}
 65. {sline} → {whileline}
@@ -97,7 +97,32 @@
 
 67. {whileline} → while {logic}: {newline} {indent} {slines} {dedent}
 
+69. {new_identifier} → {id}
 
+70. {breakline} → break {newline}
+
+71. {returnline} → return {rightside} {newline}
+
+72. {printline} → print ( {rightside} ) {newline}
+
+//  create node
+//  get its rule name
+//  get number of childs
+//  if N == -1
+//      it's an epsilon leaf
+//      nop
+//  elseif N == 0
+//      It's a leaf!
+//      skip over input until have found non-reserved lexeme
+//      set it as value
+//  else
+//      it isn't leaf
+//      create vector with N elements (children)
+//      iterate over N children
+//          recursively call the function
+//          store its return value in child[ i ]
+//  return node
+//
 
 {applicable}        {identifier}( 01, 02, 03 )
 {assignment}        {identifier}( 04 )

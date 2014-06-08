@@ -34,10 +34,11 @@ struct lex
         , MINUS                 // -
         , STAR                  // *
         , SLASH                 // /
-        , EQUAL                 // =
+        , EQUAL                 // ==
+        , ASSIGN                 // =
         , LESS                  // <
         , GREATER               // >
-        , NOT                   // !
+        , NOT_EQUAL                   // !=
         , COLON                 // :
 
         , COUNT
@@ -92,6 +93,11 @@ struct lex
         , SLINE
         , START
         , WHILELINE
+
+        , NEW_IDENTIFIER
+        , BREAKLINE
+        , RETURNLINE
+        , PRINTLINE
 
         , COUNT
         }; // enum class rule

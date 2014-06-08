@@ -4,6 +4,8 @@
 #include "parse.h"
 #include "lexeme.h"
 #include "syntax.h"
+#include "program_tree.h"
+#include "program_stucture.h"
 
 #include <fstream>
 #include <streambuf>
@@ -35,15 +37,24 @@ int main( int argc, char* argv[] )
             }
 
             sap::Queue queue = sap::parse( table, lexems.begin(), lexems.end(), ss );
-            std::cout << "Rule application sequence:\n";
-            std::cout << queue.front();
-            queue.pop();
-            while (!queue.empty()) {
-                const auto rule = queue.front();
-                queue.pop();
-                std::cout << " → " << rule;
-            }
-            std::cout << '\n';
+
+            sap::LIterator it = lexems.begin();
+            sap::node node{ queue, it };
+            std::cout << node << std::endl;
+
+            sap::Program program{ node };
+            std::cout << program.scope_;
+
+
+            // std::cout << "Rule application sequence:\n";
+            // std::cout << queue.front();
+            // queue.pop();
+            // while (!queue.empty()) {
+            //     const auto rule = queue.front();
+            //     queue.pop();
+            //     std::cout << " → " << rule;
+            // }
+            // std::cout << '\n';
         } catch ( std::exception& ex ) {
             std::cerr << ex.what();
         }
