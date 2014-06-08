@@ -22,7 +22,7 @@ struct ProgramCode
     using set = std::set< Triad >;
 
     set code_;
-    void addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
+    uint addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
     static ProgramCode& instance();
 private:
     ProgramCode() = default;
@@ -137,6 +137,7 @@ struct OperandDouble : ProgramElement< lex::rule::OPERAND_INT >
     Value value_;
 
     OperandDouble( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
@@ -145,6 +146,7 @@ struct OperandBool : ProgramElement< lex::rule::OPERAND_BOOL >
     Value value_;
 
     OperandBool( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
@@ -153,6 +155,7 @@ struct OperandString : ProgramElement< lex::rule::OPERAND_STR >
     Value value_;
 
     OperandString( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
@@ -163,6 +166,7 @@ struct ExprDouble : ProgramElement< lex::rule::EXPR_INT >
     boost::optional< OperandDouble >  rhs_;
 
     ExprDouble( const node& i_node, const Scope& i_symbolTable );
+    uint operator()() const;
 };
 
 enum class Cmp { EQ, NE, LE, GE };

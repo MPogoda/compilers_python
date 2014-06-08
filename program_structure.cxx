@@ -852,8 +852,73 @@ ProgramCode& ProgramCode::instance()
     return INSTANCE;
 }
 
-void ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
+uint ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
 {
-    code_.emplace( i_op, i_lhs, i_rhs );
+    const auto result = code_.emplace( i_op, i_lhs, i_rhs );
+
+    if (!result.second)
+        throw std::logic_error{ "Cannot add element to set!" };
+
+    return result.first->no_;
+}
+
+uint OperandDouble::operator()() const
+{
+    if (const auto id = boost::get< Identifier >( &value_ )) {
+        return ProgramCode::instance().addTriad( "LOAD", **id );
+    } else {
+        std::stringstream ss;
+        ss << boost::get< double >( value_ );
+        return ProgramCode::instance().addTriad( "GET", ss.str() );
+    }
+}
+
+uint OperandBool::operator()() const
+{
+    if (const auto id = boost::get< Identifier >( &value_ )) {
+        return ProgramCode::instance().addTriad( "LOAD", **id );
+    } else {
+        std::stringstream ss;
+        ss << (boost::get< bool >( value_ ) ? "true" : "false");
+        return ProgramCode::instance().addTriad( "GET", ss.str() );
+    }
+}
+
+uint OperandString::operator()() const
+{
+    if (const auto id = boost::get< Identifier >( &value_ )) {
+        return ProgramCode::instance().addTriad( "LOAD", **id );
+    } else {
+        return ProgramCode::instance().addTriad( "GET", boost::get< std::string >( value_ ) );
+    }
+}
+
+std::string getOp( ExprDouble::Op i_op )
+{
+    switch (i_op) {
+        case ExprDouble::Op::PLUS: return "+";
+        case ExprDouble::Op::MINUS: return "-";
+        case ExprDouble::Op::MULT: return "*";
+        case ExprDouble::Op::DIV: return "/";
+        default: assert( !"No such OP!" );
+    }
+}
+
+std::string createLink( const uint n )
+{
+    std::stringstream ss;
+    ss << '<' << n << '>';
+
+    return ss.str();
+}
+
+uint ExprDouble::operator()() const
+{
+    const auto lhs = lhs_();
+    if ( !(op_ || rhs_) ) return lhs;
+
+    const auto rhs = rhs_.get()();
+
+    return ProgramCode::instance().addTriad( getOp( op_.get() ), createLink( lhs ), createLink( rhs ) );
 }
 } // namespace sap
