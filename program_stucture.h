@@ -262,7 +262,7 @@ struct Assignment : ProgramElement< lex::rule::ASSIGNMENT >
 struct Break : ProgramElement< lex::rule::BREAKLINE >
 {
     Break( const node& i_node );
-    void operator()() const;
+    ProgramCode::Line operator()( bool insideWhile ) const;
 };
 
 struct Return : ProgramElement< lex::rule::RETURNLINE >
@@ -315,6 +315,7 @@ struct MethodDecl : ProgramElement< lex::rule::METHOD_DECL >
     Slines body_;
 
     MethodDecl( const node& i_node, ClassScope& i_symbolTable );
+    void operator()() const;
 };
 
 using MethodDecls = std::vector< MethodDecl >;

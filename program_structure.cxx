@@ -1059,15 +1059,16 @@ void Assignment::operator()() const
     addTriad( "STORE", createLink( rhs ), *lhs_.this_ );
 }
 
-void Break::operator()() const
+ProgramCode::Line Break::operator()( const bool insideWhile ) const
 {
-    addTriad( "BREAK" );
+    if (!insideWhile) throw std::logic_error{ "Cannot Use BREAK HERE!" };
+    return ProgramCode::instance().addTriad( "JMP" );
 }
 
 void Return::operator()() const
 {
     addTriad( "PUSH", createLink( getRightside( rhs_ ) ) );
-    addTriad( "RETURN" );
+    addTriad( "RET" );
 }
 
 void Print::operator()() const
@@ -1076,38 +1077,38 @@ void Print::operator()() const
     addTriad( "CALL", "SYSTEM", "WRITE" );
 }
 
-void getSline( const Sline& sline )
+boost::optional< ProgramCode::Line > getSline( const Sline& sline, const bool inside )
 {
     if (const auto d = boost::get< Assignment >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< MethodCall >( &sline )) {
+    } else if (const auto d = boost::get< MethodCall >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< Break >( &sline )) {
+    } else if (const auto d = boost::get< Break >( &sline )) {
+        return (*d)( inside );
+    } else if (const auto d = boost::get< Return >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< Return >( &sline )) {
+    } else if (const auto d = boost::get< Print >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< Print >( &sline )) {
+    } else if (const auto d = boost::get< If >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< If >( &sline )) {
+    } else if (const auto d = boost::get< While >( &sline )) {
         (*d)();
-    }
-    if (const auto d = boost::get< While >( &sline )) {
-        (*d)();
-    }
+    } else
+        assert( !"Cannot generate code for Sline element!" );
 
-    assert( !"Cannot generate code for Sline element!" );
+    return {};
 }
 
-void getSlines( const Slines& slines )
+using Lines = std::deque< ProgramCode::Line >;
+Lines getSlines( const Slines& slines, const bool insideWhile = false)
 {
+    Lines result;
     for (const auto& p : slines ) {
-        getSline( p );
+        const auto line = getSline( p, insideWhile );
+        if (line) result.push_back( *line );
     }
+
+    return result;
 }
 
 void If::operator()() const
@@ -1126,8 +1127,37 @@ void While::operator()() const
     const auto logicAddr = ProgramCode::instance().size() + 1;
     const auto logic = getLogic( logic_ );
     auto bodyAddr = ProgramCode::instance().addTriad( "JNE", createLink( logic ) );
-    getSlines( body_ );
+    auto bodyLines = getSlines( body_ );
     const auto loopAddr = addTriad( "JMP", createLink( logicAddr ) );
     bodyAddr->rhs_ = createLink( loopAddr + 1 );
+
+    for (auto line : bodyLines ) {
+        line->lhs_ = createLink( loopAddr + 1 );
+    }
+}
+
+void getMethodParameter( const Identifier id )
+{
+    const auto n = addTriad( "POP" );
+    addTriad( "STORE", createLink( n ), *id );
+}
+
+void getMethodParameters( const MethodParameters& ids )
+{
+    for (const auto id : ids )
+        getMethodParameter( id );
+}
+
+void MethodDecl::operator()() const
+{
+    getMethodParameters( params_ );
+    getSlines( body_ );
+    addTriad( "RET" );
+}
+
+void getMethodDecls( const MethodDecls& methods )
+{
+    for (const auto& method : methods)
+        method();
 }
 } // namespace sap
