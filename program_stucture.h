@@ -15,6 +15,35 @@
 
 namespace sap
 {
+struct Triad;
+
+struct ProgramCode
+{
+    using set = std::set< Triad >;
+
+    set code_;
+    void addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
+    static ProgramCode& instance();
+private:
+    ProgramCode() = default;
+    ProgramCode( const ProgramCode& ) = delete;
+    ProgramCode( ProgramCode&& ) = delete;
+    ProgramCode& operator=( const ProgramCode& ) = delete;
+    ProgramCode& operator=( ProgramCode&& ) = delete;
+};
+
+struct Triad
+{
+    static uint getNextCounter();
+
+    const uint no_;
+    std::string op_;
+    std::string lhs_;
+    std::string rhs_;
+
+    Triad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs );
+};
+
 struct ClassScope;
 using Identifiers   = std::list< std::string >;
 using Identifier    = Identifiers::const_iterator;

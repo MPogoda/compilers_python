@@ -829,4 +829,31 @@ std::ostream& operator<<( std::ostream& out, const Scope& scope )
 
     return out;
 }
+
+uint Triad::getNextCounter()
+{
+    static uint COUNTER = 0;
+
+    return ++COUNTER;
+}
+
+Triad::Triad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
+    : no_{ getNextCounter() }
+    , op_{ i_op }
+    , lhs_{ i_lhs }
+    , rhs_{ i_rhs }
+{
+}
+
+ProgramCode& ProgramCode::instance()
+{
+    static ProgramCode INSTANCE;
+
+    return INSTANCE;
+}
+
+void ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs )
+{
+    code_.emplace( i_op, i_lhs, i_rhs );
+}
 } // namespace sap
