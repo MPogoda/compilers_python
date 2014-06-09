@@ -44,6 +44,9 @@ int main( int argc, char* argv[] )
 
             sap::Program program{ node };
             std::cout << program.scope_;
+            sap::ProgramCode::instance().reset();
+            program();
+            std::cout << sap::ProgramCode::instance();
 
 
             // std::cout << "Rule application sequence:\n";

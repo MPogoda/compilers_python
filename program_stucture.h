@@ -24,8 +24,10 @@ struct ProgramCode
 
     Set code_;
     Line addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "" );
+    void addComment( const std::string& i_comment1, const std::string& i_comment2 );
     static ProgramCode& instance();
     uint size() const;
+    void reset();
 private:
     ProgramCode() = default;
     ProgramCode( const ProgramCode& ) = delete;
@@ -33,6 +35,7 @@ private:
     ProgramCode& operator=( const ProgramCode& ) = delete;
     ProgramCode& operator=( ProgramCode&& ) = delete;
 };
+std::ostream& operator<<( std::ostream& out, const ProgramCode& lhs );
 
 struct Triad
 {
@@ -45,6 +48,7 @@ struct Triad
 
     Triad( const std::string& i_op, const std::string& i_lhs, const std::string& i_rhs );
 };
+std::ostream& operator<<( std::ostream& out, const Triad& lhs );
 
 bool operator<( const Triad& lhs, const Triad& rhs_ );
 
@@ -310,6 +314,7 @@ using MethodParameters = std::vector< Identifier >;
 
 struct MethodDecl : ProgramElement< lex::rule::METHOD_DECL >
 {
+    const std::string name_;
     MethodScope& methodScope_;
     MethodParameters params_;
     Slines body_;
@@ -322,10 +327,12 @@ using MethodDecls = std::vector< MethodDecl >;
 
 struct ClassDecl : ProgramElement< lex::rule::CLASS_DECL >
 {
+    const std::string name_;
     ClassScope& classScope_;
     MethodDecls methods_;
 
     ClassDecl( const node& i_node, GlobalScope& i_symbolTable );
+    void operator()() const;
 };
 
 using ClassDecls = std::vector< ClassDecl >;
@@ -337,5 +344,6 @@ struct Program : ProgramElement< lex::rule::START >
     MethodCall run_;
 
     Program( const node& i_node );
+    void operator()() const;
 };
 } // namespace sap

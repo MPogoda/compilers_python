@@ -664,12 +664,10 @@ MethodParameters parseMethodParameters( const node& i_node, MethodScope& i_symbo
 
 MethodDecl::MethodDecl( const node& i_node, ClassScope& i_symbolTable )
     : ProgramElement{ i_node }
-    , methodScope_( i_symbolTable.addMethod( boost::get< std::string >(
-                    boost::get< lex >(
-                        boost::get< node::nodes >(
-                            i_node.value_
-                        )[ 0 ].value_
-                    ).value_) ) )
+    , name_{ boost::get< std::string >( boost::get< lex >(
+                boost::get< node::nodes >( i_node.value_)[ 0 ].value_
+                    ).value_) }
+    , methodScope_( i_symbolTable.addMethod( name_) )
     , params_( parseMethodParameters( boost::get< node::nodes >( i_node.value_)[ 1 ], methodScope_) )
     , body_( parseSlines( boost::get< node::nodes >( i_node.value_)[ 2 ], methodScope_.scope()))
 {
@@ -708,12 +706,10 @@ MethodDecls parseMethodDecls( const node& i_node, ClassScope& i_symbolTable )
 
 ClassDecl::ClassDecl( const node& i_node, GlobalScope& i_scope )
     : ProgramElement{ i_node }
-    , classScope_( i_scope.addClass( boost::get< std::string >(
-                    boost::get< lex > (
-                        boost::get< node::nodes >(
-                            i_node.value_
-                        )[ 0 ].value_
-                    ).value_ ) ) )
+    , name_{ boost::get< std::string >( boost::get< lex >(
+                boost::get< node::nodes >( i_node.value_)[ 0 ].value_
+                    ).value_) }
+    , classScope_( i_scope.addClass( name_ ) )
     , methods_{ parseMethodDecls( boost::get< node::nodes >( i_node.value_)[1], classScope_) }
 {
     DBG( '!' );
@@ -843,6 +839,12 @@ Triad::Triad( const std::string& i_op, const std::string& i_lhs, const std::stri
 {
 }
 
+// Triad::Triad( const std::string& i_comment1, const std::string& i_comment2, const bool )
+//     : op_{ i_comment1 }
+//     , lhs_{ i_comment2 }
+// {
+// }
+
 bool operator<( const Triad& lhs, const Triad& rhs )
 {
     return lhs.no_ < rhs.no_;
@@ -866,9 +868,23 @@ ProgramCode::addTriad( const std::string& i_op, const std::string& i_lhs, const 
     return result.first;
 }
 
+void
+ProgramCode::addComment( const std::string& i_comment1, const std::string& i_comment2 )
+{
+    const auto result = code_.emplace( i_comment1, i_comment2, "<<<>>>" );
+
+    if (!result.second)
+        throw std::logic_error{ "Cannot add element to set!" };
+}
+
 uint ProgramCode::size() const
 {
     return code_.size();
+}
+
+void ProgramCode::reset()
+{
+    code_.clear();
 }
 
 uint addTriad( const std::string& i_op, const std::string& i_lhs = "", const std::string& i_rhs = "")
@@ -903,7 +919,9 @@ uint OperandString::operator()() const
     if (const auto id = boost::get< Identifier >( &value_ )) {
         return addTriad( "LOAD", **id );
     } else {
-        return addTriad( "GET", boost::get< std::string >( value_ ) );
+        std::stringstream ss;
+        ss << "«" << boost::get< std::string >( value_ ) << "»";
+        return addTriad( "GET", ss.str() );
     }
 }
 
@@ -981,7 +999,7 @@ uint getLogic( const Logic& logic )
     if (const auto d = boost::get< LogicString >( &logic )) {
         return (*d)();
     }
-    if (const auto d = boost::get< LogicString >( &logic )) {
+    if (const auto d = boost::get< LogicDouble >( &logic )) {
         return (*d)();
     }
 
@@ -1013,7 +1031,9 @@ uint getRightside( const Rightside& rhs )
         return (*d)();
     }
     if (const auto d = boost::get< std::string >( &rhs )) {
-        return addTriad( "GET", *d );
+        std::stringstream ss;
+        ss << "«" << *d << "»";
+        return addTriad( "GET", ss.str() );
     }
 
     assert( !"Cannot generate code for RIGHTSIDE element!" );
@@ -1150,6 +1170,8 @@ void getMethodParameters( const MethodParameters& ids )
 
 void MethodDecl::operator()() const
 {
+    ProgramCode::instance().addComment( "Method: ", name_ );
+
     getMethodParameters( params_ );
     getSlines( body_ );
     addTriad( "RET" );
@@ -1159,5 +1181,37 @@ void getMethodDecls( const MethodDecls& methods )
 {
     for (const auto& method : methods)
         method();
+}
+
+void ClassDecl::operator()() const
+{
+    ProgramCode::instance().addComment( "Class: ", name_ );
+    getMethodDecls( methods_ );
+}
+
+void getClassDecls( const ClassDecls& classes )
+{
+    for (const auto& c : classes)
+        c();
+}
+
+void Program::operator()() const
+{
+    getClassDecls( classes_ );
+    run_();
+}
+
+std::ostream& operator<<( std::ostream& out, const ProgramCode& lhs )
+{
+    for (const auto& line : lhs.code_)
+        out << line << '\n';
+
+    return out;
+}
+
+std::ostream& operator<<( std::ostream& out, const Triad& lhs )
+{
+    out << lhs.no_ << '\t' << lhs.op_ << '\t' << lhs.lhs_ << '\t' << lhs.rhs_;
+    return out;
 }
 } // namespace sap
