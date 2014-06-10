@@ -1,0 +1,227 @@
+% vim:spelllang=ru,en
+\documentclass[a4paper,12pt,notitlepage,pdftex]{scrreprt}
+
+\usepackage{cmap} % чтобы работал поиск по PDF
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[T2A]{fontenc}
+\usepackage{concrete}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{subfig}
+
+\pdfcompresslevel=9 % сжимать PDF
+\usepackage{pdflscape} % для возможности альбомного размещения некоторых страниц
+\usepackage[pdftex]{hyperref}
+% настройка ссылок в оглавлении для pdf формата
+\hypersetup{unicode=true,
+    pdftitle={Лабораторная робота №4},
+    pdfauthor={Погода Михаил},
+    pdfcreator={pdflatex},
+    pdfsubject={},
+    pdfborder    = {0 0 0},
+    bookmarksopen,
+    bookmarksnumbered,
+    bookmarksopenlevel = 2,
+    pdfkeywords={},
+    colorlinks=true, % установка цвета ссылок в оглавлении
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{listings}
+\lstloadlanguages{Python,C++}
+\lstset{language=Python,frame=tb,basicstyle=\small,commentstyle=\itshape,extendedchars=false}
+
+\usepackage{multicol}
+
+\begin{document}
+\begin{titlepage}
+    \begin{center}
+        \MakeUppercase{Министерство образования и науки Украины}\\
+        \MakeUppercase{Национальный технический университет Украины}\\
+        \MakeUppercase{<<Киевский политехнический институт>>}\\
+        \vspace*{2em}
+
+        Факультет прикладной математики\\
+        Кафедра прикладной математики
+
+        \vfill
+
+        \MakeUppercase{Генератор промежуточного кода}\\
+        \vspace*{2em}
+
+        Отчёт по лабораторной работе \textnumero~4\\
+        по дисциплине:\\
+        <<Системы автоматизации программирования>>
+    \end{center}
+
+    \vfill
+    \hfill\begin{minipage}{0.3\textwidth}
+        Выполнил студент\\
+        группы КМ-31м\\
+        Погода~М.\,В.
+    \end{minipage}
+
+    \vfill
+    \begin{center}
+        Киев\\
+        2014
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Постановка задачи}
+\label{chap:first}
+    В рамках этой лабораторной работы необходимо организовать схему перевода основных синтаксических конструкций
+    подмножества языка программирования \texttt{Python}, определить таблицу базовых операций и реализовать
+    соответствующий программный модуль.
+
+    В качестве схемы перевода необходимо использовать триады.
+\chapter{Базовые операции промежуточного кода}
+\label{chap:second}
+    \paragraph{\verb"LOAD"} Загружает данные из переменной, переданной как первый аргумент, в память.
+    \paragraph{\verb"GET"} Загружает данные из константы, переданной как первый аргумент, в память.
+    \paragraph{Бинарные операции}
+        Все бинарные операции представляются в виде \verb"{op} {addr-arg1} {addr-arg2}", где \verb"{op}" принимает
+        одно из следующих значений:
+    \begin{multicols}{4}
+        \begin{itemize}
+            \item \verb"+"
+            \item \verb"-"
+            \item \verb"*"
+            \item \verb"/"
+            \item \verb"=="
+            \item \verb"!="
+            \item \verb"<"
+            \item \verb">"
+        \end{itemize}
+    \end{multicols}
+    \paragraph{\verb"CREATE"} Создаёт экземпляр класса, переданной как первый аргумент, в память.
+    \paragraph{\verb"PUSH"} Заносит данные, находящиеся по адресу, переданные как первый аргумент, в вершину стека.
+    \paragraph{\verb"POP"} Достаёт данные из вершины стека.
+    \paragraph{\verb"STORE"} Заносит данные, находящиеся по адресу, переданному как первый аргумент в переменную,
+    переданную как второй аргумент.
+    \paragraph{\verb"JMP"} Безусловный переход.
+    \paragraph{\verb"JNE"} Условный переход если первый аргумент ложен.
+    \paragraph{\verb"RET"} Возврат из метода.
+    \paragraph{\verb"CALL"} Вызов метода у объекта.
+\chapter{Организация генерации кода}
+    Синтаксический анализатором строится синтаксическое дерево, каждый из узлов которого может иметь свою
+    присоединённую процедуру в зависимости от типа вершины.
+
+    По сути, генерация кода начинается с вызова присоединённой процедуры у вершины дерева, которая в свою очередь
+    вызывает в необходимом порядке присоединённые процедуры у своих связей.
+\chapter{Тестовые примеры}
+\label{chap:fourth}
+        \lstinputlisting{../test1.py}
+        \paragraph{Вывод программы}
+        \begin{verbatim}
+1       Class:  someclass       <<<>>>
+2       Method:         foo     <<<>>>
+3       POP
+4       STORE   <3>     self
+5       POP
+6       STORE   <5>     x
+7       LOAD    x
+8       GET     5
+9       ==      <7>     <8>
+10      JNE     <9>     <15>
+11      GET     «foo»
+12      PUSH    <11>
+13      CALL    SYSTEM  WRITE
+14      JMP     <18>
+15      GET     «bar»
+16      PUSH    <15>
+17      CALL    SYSTEM  WRITE
+18      RET
+19      Method:         bar     <<<>>>
+20      POP
+21      STORE   <20>    self
+22      POP
+23      STORE   <22>    a
+24      POP
+25      STORE   <24>    b
+26      LOAD    b
+27      LOAD    a
+28      -       <26>    <27>
+29      STORE   <28>    c
+30      LOAD    c
+31      PUSH    <30>
+32      RET
+33      RET
+34      Class:  someotherclass  <<<>>>
+35      Method:         foo     <<<>>>
+36      POP
+37      STORE   <36>    self
+38      POP
+39      STORE   <38>    a
+40      POP
+41      STORE   <40>    b
+42      CREATE  someclass
+43      STORE   <42>    c
+44      LOAD    c
+45      LOAD    a
+46      PUSH    <45>
+47      LOAD    b
+48      PUSH    <47>
+49      CALL    <44>    bar
+50      POP
+51      STORE   <50>    z
+52      LOAD    c
+53      LOAD    z
+54      PUSH    <53>
+55      CALL    <52>    foo
+56      POP
+57      RET
+58      Class:  main    <<<>>>
+59      Method:         run     <<<>>>
+60      POP
+61      STORE   <60>    self
+62      CREATE  someotherclass
+63      STORE   <62>    m
+64      LOAD    m
+65      GET     5
+66      PUSH    <65>
+67      GET     10
+68      PUSH    <67>
+69      CALL    <64>    foo
+70      POP
+71      LOAD    m
+72      GET     3
+73      PUSH    <72>
+74      GET     6
+75      PUSH    <74>
+76      CALL    <71>    foo
+77      POP
+78      GET     1.53
+79      STORE   <78>    a
+80      GET     «asdd{}fgkjhns sdf asd »
+81      STORE   <80>    c
+82      GET     false
+83      STORE   <82>    d
+84      RET
+85      CREATE  main
+86      CALL    <85>    run
+87      POP
+        \end{verbatim}
+
+\chapter{Выводы}
+\label{chap:concl}
+    В данной лабораторной работе была рассмотрена генерация промежуточного кода в виде триад для синтаксического
+    дерева, построенного синтаксический анализатором языка программирования Python в рамках второй лабораторной
+    работы.
+
+    Стоит отметить, что инструмент поддержания выполнения кода должен проверять наличие методов у объектов, поскольку
+    язык Python является динамически-типизированным и нельзя определить, какие методы есть у объекта во время
+    синтаксического разбора.
+\chapter*{Приложение. Исходный текст}
+    \lstset{language=C++,basicstyle=\scriptsize}
+    \lstinputlisting{../program_tree.cxx}
+\end{document}
