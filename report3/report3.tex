@@ -1,0 +1,192 @@
+% vim:spelllang=ru,en
+\documentclass[a4paper,12pt,notitlepage,pdftex]{scrreprt}
+
+\usepackage{cmap} % чтобы работал поиск по PDF
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[T2A]{fontenc}
+\usepackage{concrete}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{subfig}
+
+\pdfcompresslevel=9 % сжимать PDF
+\usepackage{pdflscape} % для возможности альбомного размещения некоторых страниц
+\usepackage[pdftex]{hyperref}
+% настройка ссылок в оглавлении для pdf формата
+\hypersetup{unicode=true,
+    pdftitle={Лабораторная робота №3},
+    pdfauthor={Погода Михаил},
+    pdfcreator={pdflatex},
+    pdfsubject={},
+    pdfborder    = {0 0 0},
+    bookmarksopen,
+    bookmarksnumbered,
+    bookmarksopenlevel = 2,
+    pdfkeywords={},
+    colorlinks=true, % установка цвета ссылок в оглавлении
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{listings}
+\lstloadlanguages{Python,C++}
+\lstset{language=Python,frame=tb,basicstyle=\small,commentstyle=\itshape,extendedchars=false}
+
+\usepackage{multicol}
+
+\begin{document}
+\begin{titlepage}
+    \begin{center}
+        \MakeUppercase{Министерство образования и науки Украины}\\
+        \MakeUppercase{Национальный технический университет Украины}\\
+        \MakeUppercase{<<Киевский политехнический институт>>}\\
+        \vspace*{2em}
+
+        Факультет прикладной математики\\
+        Кафедра прикладной математики
+
+        \vfill
+
+        \MakeUppercase{Построение таблицы символов}\\
+        \vspace*{2em}
+
+        Отчёт по лабораторной работе \textnumero~3\\
+        по дисциплине:\\
+        <<Системы автоматизации программирования>>
+    \end{center}
+
+    \vfill
+    \hfill\begin{minipage}{0.3\textwidth}
+        Выполнил студент\\
+        группы КМ-31м\\
+        Погода~М.\,В.
+    \end{minipage}
+
+    \vfill
+    \begin{center}
+        Киев\\
+        2014
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Постановка задачи}
+\label{chap:first}
+    В рамках этой лабораторной работы необходимо организовать построение таблицы символов к синтаксическому
+    анализатору подмножества языка программирования \texttt{Python}, который был реализован в прошлой лабораторной
+    работе.
+
+    С использование таблицы символов необходимо провести семантический анализ кода.
+\chapter{Организация таблицы символов и её компонентов}
+\label{chap:second}
+    Для организации работы используются следующая иерархия таблиц символов:
+    \begin{enumerate}
+        \item Глобальная таблица имён.
+            Хранит имена объявленных классов и не даёт повторно объявить класс.
+        \item Таблица имён класса.
+            Хранит имена объявленных методов внутри класса.
+            Не даёт объявить метод, имеющий имя, совпадающее с другим методом внутри этого класса, а также с классами,
+            объявленными ранее.
+        \item Локальная таблица имён.
+            Хранит имена объявленных переменных.
+            Позволяет выявить использование необъявленных переменных.
+            Может хранить другие локальные таблицы имён, соответствующие блокам кода.
+    \end{enumerate}
+    \section{Выбранный метод поиска символов}
+    \label{sec:formal}
+        В данной работе используется поиска символов с помощью хеш"=таблиц.
+
+        Поскольку язык является динамически"=типизированным, проверка наличия метода у объекта не производится во
+        время семантического контроля.
+        Эта проверка должна выполняться во время выполнения программы с помощью механизма поддержания работы.
+
+        Для других символов производится контроль использования: переменная не может использована до тех пор, пока она
+        не была объявлена.
+        Объявленной считается переменная, которая либо является параметром метода, либо находилась с левой стороны от
+        оператора присваивания.
+
+\chapter{Метод построения таблицы символов}
+    Синтаксический анализатор, который был разработан в рамках прошлой лабораторной работы, строит синтаксическое
+    дерево, где каждой вершине, не являющейся листом, соответствует нетерминальный символ.
+
+    Для построения таблицы символов достаточно осуществить обход дерева в глубину и выполнить семантическую процедуру
+    в соответствии с типом вершины.
+    Можно отметить, что модификация таблицы символов возможна только при обработке ограниченного числа вершин, а
+    именно:
+    \begin{itemize}
+        \item \verb'{classdecl}'
+        \item \verb'{methoddecl}'
+        \item \verb'{if}'
+        \item \verb'{while}'
+        \item \verb'{new-identifier}'
+    \end{itemize}
+
+    Во время разбора синтаксического дерева, вызываются присоединённые семантические процедуры.
+    Эти процедуры строят таблицы символов и производят проверки, описанные выше.
+\chapter{Тестовые примеры}
+\label{chap:fourth}
+    \section{Пример без семантических ошибок}
+    \label{sec:ex1}
+        \lstinputlisting{../test1.py}
+        Вывод программы:
+        \begin{verbatim}
+Class[[[ main
+        Method[[[ run
+                Parameters: self
+                Local variables: m  a  c  d
+        Method]]] run
+Class]]] main
+Class[[[ someclass
+        Method[[[ bar
+                Parameters: self  a  b
+                Local variables: c
+        Method]]] bar
+        Method[[[ foo
+                Parameters: self  x
+                Local variables:
+                Inner block[[[
+                        Local variables:
+                Inner block]]]
+                Inner block[[[
+                        Local variables:
+                Inner block]]]
+        Method]]] foo
+Class]]] someclass
+Class[[[ someotherclass
+        Method[[[ foo
+                Parameters: self  a  b
+                Local variables: c  z
+        Method]]] foo
+Class]]] someotherclass
+
+        \end{verbatim}
+
+    \section{Пример с семантической ошибкой}
+    \label{sec:ex2}
+        \begin{lstlisting}
+class main:
+    def run( self ):
+        a = b + c
+        run = a
+
+main().run()
+        \end{lstlisting}
+\chapter{Выводы}
+\label{chap:concl}
+    Для семантической корректности программы необходимо учесть для каждого синтаксического элемента, какие необходимо
+    предусловия для семантической корректности выражения, а также какие изменения в таблицу символов может принести
+    этот синтаксический элемент.
+
+    Построение таблицы символов было встроено в синтаксический анализатор, т.к.\ все необходимые данные можно получить
+    за один проход по исходному тексту.
+\chapter*{Приложение. Исходный текст}
+    \lstset{language=C++,basicstyle=\scriptsize}
+    \lstinputlisting{../program_tree.cxx}
+\end{document}
