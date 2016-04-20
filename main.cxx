@@ -47,17 +47,6 @@ int main( int argc, char* argv[] )
             sap::ProgramCode::instance().reset();
             program();
             std::cout << sap::ProgramCode::instance();
-
-
-            // std::cout << "Rule application sequence:\n";
-            // std::cout << queue.front();
-            // queue.pop();
-            // while (!queue.empty()) {
-            //     const auto rule = queue.front();
-            //     queue.pop();
-            //     std::cout << " → " << rule;
-            // }
-            // std::cout << '\n';
         } catch ( std::exception& ex ) {
             std::cerr << ex.what();
         }
